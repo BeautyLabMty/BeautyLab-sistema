@@ -892,10 +892,13 @@ async function pgCaja(){
                 :`<option value="${CU.id}">${CU.name}</option>`}
             </select></div>
           <div class="fg" style="margin:0"><label class="fl">Clienta</label>
-            <select class="fc" id="pcl" onchange="setCli(this.value,this.selectedOptions[0]?.text)">
-              <option value="">— Sin clienta —</option>
-              ${clis.map(cl=>`<option value="${cl.id}" ${selCli?.id===cl.id?'selected':''}>${cl.nombre}</option>`).join('')}
-            </select></div>
+            <div style="display:flex;gap:5px">
+              <select class="fc" id="pcl" onchange="setCli(this.value,this.selectedOptions[0]?.text)">
+                <option value="">— Sin clienta —</option>
+                ${clis.map(cl=>`<option value="${cl.id}" ${selCli?.id===cl.id?'selected':''}>${cl.nombre}</option>`).join('')}
+              </select>
+              <button class="btn bp bsm" onclick="openNewCliCaja()" title="Nueva clienta" style="white-space:nowrap">+ Nueva</button>
+            </div></div>
         </div>
         <div class="tabs">
           <div class="tab active" onclick="posTab(this,'svcs')">Servicios</div>
@@ -946,7 +949,34 @@ async function pgCaja(){
   renderCart();
 }
 
-function renderPCats(cats,pm={}){
+function openNewCliCaja(){
+  openM(`
+    <div class="mt">✦ Nueva Clienta</div>
+    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="ncc-n" placeholder="Nombre completo"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Teléfono</label><input class="fc" id="ncc-t" type="tel" placeholder="81 0000 0000"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fc" id="ncc-e" type="email" placeholder="correo@..."></div>
+    </div>
+    <div class="fg"><label class="fl">Notas / Alergias</label><input class="fc" id="ncc-no" placeholder="Opcional..."></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveNewCliCaja()">Guardar y Seleccionar</button>
+    </div>`);
+}
+
+async function saveNewCliCaja(){
+  const n=G('ncc-n')?.value?.trim();
+  if(!n){toast('Nombre requerido','err');return;}
+  const r=await dbI('bl_clientes',{nombre:n,telefono:G('ncc-t')?.value,
+    email:G('ncc-e')?.value,notas:G('ncc-no')?.value,
+    created_at:new Date().toISOString()});
+  if(r){
+    selCli={id:r.id,nombre:n};
+    toast(`${n} agregada ✓`,'ok');
+    closeM();
+    pgCaja(); // recargar caja con nueva clienta seleccionada
+  }
+}
   return cats.map(cat=>`
     <div class="pos-cl">${cat}</div>
     ${CAT.filter(s=>s.cat===cat).map(s=>{
