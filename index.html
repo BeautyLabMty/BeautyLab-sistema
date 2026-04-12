@@ -345,84 +345,84 @@ const ROLES = {admin:'Administradora',senior:'Estilista Senior',nails:'Nails',jr
 
 // CATÁLOGO
 const CAT = [
-  {id:'c1', cat:'Cortes',          name:'Corte de Dama',                    price:540},
-  {id:'c2', cat:'Cortes',          name:'Corte de Caballero',               price:320},
-  {id:'c3', cat:'Cortes',          name:'Despunte',                         price:400},
-  {id:'p1', cat:'Peinados',        name:'Peinado Elaborado',                price:650},
-  {id:'p2', cat:'Peinados',        name:'Secado Estilizado',                price:350},
-  {id:'p3', cat:'Peinados',        name:'Ondas Wave',                       price:300},
-  {id:'p4', cat:'Peinados',        name:'Planchado',                        price:300},
-  {id:'e1', cat:'Extras',          name:'Lavado de Cabello',                price:100},
-  {id:'d1', cat:'Depilaciones',    name:'Ceja',                             price:200},
-  {id:'d2', cat:'Depilaciones',    name:'Bozo',                             price:100},
-  {id:'d3', cat:'Depilaciones',    name:'Patilla',                          price:150},
-  {id:'d4', cat:'Depilaciones',    name:'Cara Completa',                    price:350},
-  {id:'d5', cat:'Depilaciones',    name:'Laminado de Ceja',                 price:650},
-  {id:'d6', cat:'Depilaciones',    name:'Lifting',                          price:650},
-  {id:'d7', cat:'Depilaciones',    name:'Cejas HD (Laminado + Henna)',      price:750},
-  {id:'m1', cat:'Maquillaje',      name:'Maquillaje Social + Waves',        price:1500},
-  {id:'m2', cat:'Maquillaje',      name:'Maquillaje Ojos + Pestañas',       price:800},
+  {id:'c1', cat:'Cortes',          name:'Corte de Dama',                    price:640},
+  {id:'c2', cat:'Cortes',          name:'Corte de Caballero',               price:420},
+  {id:'c3', cat:'Cortes',          name:'Despunte',                         price:500},
+  {id:'p1', cat:'Peinados',        name:'Peinado Elaborado',                price:900},
+  {id:'p2', cat:'Peinados',        name:'Secado Estilizado',                price:450},
+  {id:'p3', cat:'Peinados',        name:'Ondas Wave',                       price:450},
+  {id:'p4', cat:'Peinados',        name:'Planchado',                        price:450},
+  {id:'e1', cat:'Extras',          name:'Lavado de Cabello',                price:150},
+  {id:'d1', cat:'Depilaciones',    name:'Ceja',                             price:250},
+  {id:'d2', cat:'Depilaciones',    name:'Bozo',                             price:120},
+  {id:'d3', cat:'Depilaciones',    name:'Patilla',                          price:180},
+  {id:'d4', cat:'Depilaciones',    name:'Cara Completa',                    price:400},
+  {id:'d5', cat:'Depilaciones',    name:'Laminado de Ceja',                 price:750},
+  {id:'d6', cat:'Depilaciones',    name:'Lifting',                          price:750},
+  {id:'d7', cat:'Depilaciones',    name:'Cejas HD (Laminado + Henna)',      price:900},
+  {id:'m1', cat:'Maquillaje',      name:'Maquillaje Social + Waves',        price:1800},
+  {id:'m2', cat:'Maquillaje',      name:'Maquillaje Ojos + Pestañas',       price:900},
   {id:'m3', cat:'Maquillaje',      name:'Paquete Novia / XV Años',          price:0,  variable:true},
-  {id:'t1', cat:'Tratamientos',    name:'Ampolleta Estructural',            price:300},
-  {id:'t2', cat:'Tratamientos',    name:'Hidratación Mascarilla',           price:350},
-  {id:'t3', cat:'Tratamientos',    name:'Alfaparf',                         price:1000},
-  {id:'t4', cat:'Tratamientos',    name:'Células Madre',                    price:1500},
-  {id:'t5', cat:'Tratamientos',    name:'Motika — Corto',                   price:400},
-  {id:'t6', cat:'Tratamientos',    name:'Motika — Mediano',                 price:800},
-  {id:'t7', cat:'Tratamientos',    name:'Motika — Largo',                   price:1200},
-  {id:'t8', cat:'Tratamientos',    name:'Smooth Keratina — Corto',          price:1500},
-  {id:'t9', cat:'Tratamientos',    name:'Smooth Keratina — Mediano',        price:2000},
-  {id:'t10',cat:'Tratamientos',    name:'Smooth Keratina — Largo',          price:2500},
-  {id:'t11',cat:'Tratamientos',    name:'Smooth Keratina — Extra Largo',    price:3500},
-  {id:'cl1',cat:'Color',           name:'Tinte Completo — Corto',           price:800},
-  {id:'cl2',cat:'Color',           name:'Tinte Completo — Mediano',         price:1100},
-  {id:'cl3',cat:'Color',           name:'Tinte Completo — Largo',           price:1400},
-  {id:'cl4',cat:'Color',           name:'Tinte Completo — Extra Largo',     price:1800},
-  {id:'cl5',cat:'Color',           name:'Retoque Tinte',                    price:650},
-  {id:'cl6',cat:'Color',           name:'Color Refresh',                    price:550},
-  {id:'dc1',cat:'Diseños de Color',name:'Luces/Babylight — Corto',          price:1200},
-  {id:'dc2',cat:'Diseños de Color',name:'Luces/Babylight — Mediano',        price:2200},
-  {id:'dc3',cat:'Diseños de Color',name:'Luces/Babylight — Largo',          price:3400},
-  {id:'dc4',cat:'Diseños de Color',name:'Luces/Babylight — XL',             price:4500},
-  {id:'dc5',cat:'Diseños de Color',name:'Shatush — Mediano',                price:2400},
-  {id:'dc6',cat:'Diseños de Color',name:'Shatush — Largo',                  price:3200},
-  {id:'dc7',cat:'Diseños de Color',name:'Shatush — Extra Largo',            price:4000},
-  {id:'dc8',cat:'Diseños de Color',name:'Decoraciones Globales — Corto',    price:1800},
-  {id:'dc9',cat:'Diseños de Color',name:'Decoraciones Globales — Mediano',  price:2500},
-  {id:'dc10',cat:'Diseños de Color',name:'Decoraciones Globales — Largo',   price:2950},
-  {id:'dc11',cat:'Diseños de Color',name:'Decoraciones Globales — XL',      price:3700},
-  {id:'dc12',cat:'Diseños de Color',name:'Balayage — Corto',                price:1700},
-  {id:'dc13',cat:'Diseños de Color',name:'Balayage — Mediano',              price:2300},
-  {id:'dc14',cat:'Diseños de Color',name:'Balayage — Largo',                price:2900},
-  {id:'dc15',cat:'Diseños de Color',name:'Balayage — Extra Largo',          price:3700},
-  {id:'a1', cat:'Acrílico',        name:'Mantenimiento Acrílico + Gel',     price:400},
-  {id:'a2', cat:'Acrílico',        name:'Uñas de Tip + Gel 1 Tono',         price:520},
-  {id:'a3', cat:'Acrílico',        name:'Uñas Esculturales + Gel 1 Tono',   price:630},
-  {id:'a4', cat:'Acrílico',        name:'Retiro Acrílico',                  price:180},
-  {id:'a5', cat:'Acrílico',        name:'Baño de Acrílico',                 price:350},
+  {id:'t1', cat:'Tratamientos',    name:'Ampolleta Estructural',            price:350},
+  {id:'t2', cat:'Tratamientos',    name:'Hidratación Mascarilla',           price:450},
+  {id:'t3', cat:'Tratamientos',    name:'Alfaparf',                         price:1200},
+  {id:'t4', cat:'Tratamientos',    name:'Células Madre',                    price:1700},
+  {id:'t5', cat:'Tratamientos',    name:'Motika — Corto',                   price:500},
+  {id:'t6', cat:'Tratamientos',    name:'Motika — Mediano',                 price:900},
+  {id:'t7', cat:'Tratamientos',    name:'Motika — Largo',                   price:1400},
+  {id:'t8', cat:'Tratamientos',    name:'Smooth Keratina — Corto',          price:1800},
+  {id:'t9', cat:'Tratamientos',    name:'Smooth Keratina — Mediano',        price:2500},
+  {id:'t10',cat:'Tratamientos',    name:'Smooth Keratina — Largo',          price:3000},
+  {id:'t11',cat:'Tratamientos',    name:'Smooth Keratina — Extra Largo',    price:4000},
+  {id:'cl1',cat:'Color',           name:'Tinte Completo — Corto',           price:900},
+  {id:'cl2',cat:'Color',           name:'Tinte Completo — Mediano',         price:1300},
+  {id:'cl3',cat:'Color',           name:'Tinte Completo — Largo',           price:1600},
+  {id:'cl4',cat:'Color',           name:'Tinte Completo — Extra Largo',     price:2000},
+  {id:'cl5',cat:'Color',           name:'Retoque Tinte',                    price:750},
+  {id:'cl6',cat:'Color',           name:'Color Refresh',                    price:600},
+  {id:'dc1',cat:'Diseños de Color',name:'Luces/Babylight — Corto',          price:1500},
+  {id:'dc2',cat:'Diseños de Color',name:'Luces/Babylight — Mediano',        price:2600},
+  {id:'dc3',cat:'Diseños de Color',name:'Luces/Babylight — Largo',          price:3800},
+  {id:'dc4',cat:'Diseños de Color',name:'Luces/Babylight — XL',             price:5000},
+  {id:'dc5',cat:'Diseños de Color',name:'Shatush — Mediano',                price:2800},
+  {id:'dc6',cat:'Diseños de Color',name:'Shatush — Largo',                  price:3600},
+  {id:'dc7',cat:'Diseños de Color',name:'Shatush — Extra Largo',            price:4500},
+  {id:'dc8',cat:'Diseños de Color',name:'Decoraciones Globales — Corto',    price:2200},
+  {id:'dc9',cat:'Diseños de Color',name:'Decoraciones Globales — Mediano',  price:2900},
+  {id:'dc10',cat:'Diseños de Color',name:'Decoraciones Globales — Largo',   price:3400},
+  {id:'dc11',cat:'Diseños de Color',name:'Decoraciones Globales — XL',      price:4300},
+  {id:'dc12',cat:'Diseños de Color',name:'Balayage — Corto',                price:2000},
+  {id:'dc13',cat:'Diseños de Color',name:'Balayage — Mediano',              price:2600},
+  {id:'dc14',cat:'Diseños de Color',name:'Balayage — Largo',                price:3200},
+  {id:'dc15',cat:'Diseños de Color',name:'Balayage — Extra Largo',          price:0, variable:true},
+  {id:'a1', cat:'Acrílico',        name:'Mantenimiento Acrílico + Gel',     price:480},
+  {id:'a2', cat:'Acrílico',        name:'Uñas de Tip + Gel 1 Tono',         price:600},
+  {id:'a3', cat:'Acrílico',        name:'Uñas Esculturales + Gel 1 Tono',   price:800},
+  {id:'a4', cat:'Acrílico',        name:'Retiro Acrílico',                  price:200},
+  {id:'a5', cat:'Acrílico',        name:'Baño de Acrílico',                 price:400},
   {id:'a6', cat:'Acrílico',        name:'Parche Acrílico (x uña)',          price:50},
   {id:'a7', cat:'Acrílico',        name:'Reposición de Uña',                price:60},
-  {id:'tg1',cat:'Tech Gel',        name:'Tech Gel Nuevas + Gel',            price:450},
-  {id:'tg2',cat:'Tech Gel',        name:'Tech Gel Mantenimiento',           price:380},
-  {id:'tg3',cat:'Tech Gel',        name:'Retiro Tech Gel',                  price:180},
-  {id:'du1',cat:'Diseños Uñas',    name:'Efecto en Polvo (x uña)',          price:12},
-  {id:'du2',cat:'Diseños Uñas',    name:'Diseño Sencillo (x uña)',          price:12},
-  {id:'du3',cat:'Diseños Uñas',    name:'Diseño Medio (x uña)',             price:17},
-  {id:'du4',cat:'Diseños Uñas',    name:'Diseño Elaborado (x uña)',         price:30},
-  {id:'du5',cat:'Diseños Uñas',    name:'Diseño Mano Alzada (x uña)',       price:60},
-  {id:'mn1',cat:'Manicure',        name:'Esmaltado Clásico',                price:140},
-  {id:'mn2',cat:'Manicure',        name:'Esmaltado con Vinylux',            price:170},
-  {id:'mn3',cat:'Manicure',        name:'Gel Clásico',                      price:210},
-  {id:'mn4',cat:'Manicure',        name:'Nivelación Rubber Beige/Pink',     price:350},
-  {id:'mn5',cat:'Manicure',        name:'Retiro de Gel',                    price:100},
-  {id:'mn6',cat:'Manicure',        name:'Manicura Rusa',                    price:350},
-  {id:'mn7',cat:'Manicure',        name:'Manicura Rusa con Gel',            price:450},
-  {id:'mn8',cat:'Manicure',        name:'Manicura Rusa SPA',                price:460},
-  {id:'mn9',cat:'Manicure',        name:'Manicura Rusa SPA con Gel',        price:550},
-  {id:'pd1',cat:'Pedicure',        name:'Pedicure Básico',                  price:460},
-  {id:'pd2',cat:'Pedicure',        name:'Pedicure Básico con Gel',          price:580},
-  {id:'pd3',cat:'Pedicure',        name:'Pedicure SPA',                     price:600},
-  {id:'pd4',cat:'Pedicure',        name:'Pedicure SPA con Gel',             price:700},
+  {id:'tg1',cat:'Tech Gel',        name:'Tech Gel Nuevas + Gel',            price:520},
+  {id:'tg2',cat:'Tech Gel',        name:'Tech Gel Mantenimiento',           price:420},
+  {id:'tg3',cat:'Tech Gel',        name:'Retiro Tech Gel',                  price:200},
+  {id:'du1',cat:'Diseños Uñas',    name:'Efecto en Polvo (x uña)',          price:15},
+  {id:'du2',cat:'Diseños Uñas',    name:'Diseño Sencillo (x uña)',          price:15},
+  {id:'du3',cat:'Diseños Uñas',    name:'Diseño Medio (x uña)',             price:25},
+  {id:'du4',cat:'Diseños Uñas',    name:'Diseño Elaborado (x uña)',         price:40},
+  {id:'du5',cat:'Diseños Uñas',    name:'Diseño Mano Alzada (x uña)',       price:70},
+  {id:'mn1',cat:'Manicure',        name:'Esmaltado Clásico',                price:160},
+  {id:'mn2',cat:'Manicure',        name:'Esmaltado con Vinylux',            price:200},
+  {id:'mn3',cat:'Manicure',        name:'Gel Clásico',                      price:250},
+  {id:'mn4',cat:'Manicure',        name:'Nivelación Rubber Beige/Pink',     price:400},
+  {id:'mn5',cat:'Manicure',        name:'Retiro de Gel',                    price:120},
+  {id:'mn6',cat:'Manicure',        name:'Manicura Rusa',                    price:400},
+  {id:'mn7',cat:'Manicure',        name:'Manicura Rusa con Gel',            price:500},
+  {id:'mn8',cat:'Manicure',        name:'Manicura Rusa SPA',                price:650},
+  {id:'mn9',cat:'Manicure',        name:'Manicura Rusa SPA con Gel',        price:750},
+  {id:'pd1',cat:'Pedicure',        name:'Pedicure Básico',                  price:500},
+  {id:'pd2',cat:'Pedicure',        name:'Pedicure Básico con Gel',          price:650},
+  {id:'pd3',cat:'Pedicure',        name:'Pedicure SPA',                     price:700},
+  {id:'pd4',cat:'Pedicure',        name:'Pedicure SPA con Gel',             price:850},
 ];
 const CATS = [...new Set(CAT.map(s=>s.cat))];
 
@@ -799,7 +799,7 @@ function renderCliT(l){
       <td style="font-size:11px">${cl.email||'—'}</td>
       <td style="font-size:11px">${cl.cumpleanos||'—'}</td>
       <td style="font-size:10px;color:var(--g3)">${cl.created_at?new Date(cl.created_at).toLocaleDateString('es-MX'):'—'}</td>
-      <td><button class="btn bg bsm" onclick="verCli('${cl.id}')">Ver</button></td>
+      <td><button class="btn bg bsm" onclick="verCli('${cl.id}')">Ver</button> <button class="btn bg bsm" onclick="editCli('${cl.id}')">✏️</button></td>
     </tr>`).join('')}</tbody></table>`;
 }
 function filtCli(q){
@@ -828,7 +828,30 @@ async function saveCli(){
     cumpleanos:G('nc-b')?.value,notas:G('nc-no')?.value,created_at:new Date().toISOString()});
   if(r){toast('Clienta guardada ✓','ok');closeM();pgCli();}
 }
-async function verCli(id){
+async function editCli(id){
+  const clis=await dbQ('bl_clientes');
+  const cl=clis.find(c=>c.id===id);if(!cl)return;
+  openM(`
+    <div class="mt">✏️ Editar Clienta</div>
+    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="ec-n" value="${cl.nombre||''}"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Teléfono</label><input class="fc" id="ec-t" type="tel" value="${cl.telefono||''}"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fc" id="ec-e" type="email" value="${cl.email||''}"></div>
+    </div>
+    <div class="fg"><label class="fl">Cumpleaños</label><input class="fc" id="ec-b" type="date" value="${cl.cumpleanos||''}"></div>
+    <div class="fg"><label class="fl">Notas / Alergias</label><textarea class="fc" id="ec-no" rows="2">${cl.notas||''}</textarea></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="updateCli('${id}')">Guardar Cambios</button>
+    </div>`);
+}
+async function updateCli(id){
+  const n=G('ec-n')?.value?.trim();
+  if(!n){toast('Nombre requerido','err');return;}
+  const ok=await dbU('bl_clientes',id,{nombre:n,telefono:G('ec-t')?.value,
+    email:G('ec-e')?.value,cumpleanos:G('ec-b')?.value,notas:G('ec-no')?.value});
+  if(ok){toast('Clienta actualizada ✓','ok');closeM();pgCli();}
+}
   const[clis,citas,ventas]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_citas',{cliente_id:id}),dbQ('bl_ventas',{cliente_id:id})]);
   const cl=clis.find(c=>c.id===id);if(!cl)return;
   const tot=ventas.reduce((s,v)=>s+(v.total||0),0);
@@ -855,7 +878,8 @@ async function verCli(id){
 // =============================================================
 async function pgCaja(){
   if(!selEst&&CU.role!=='admin')selEst=CU;
-  const clis=await dbQ('bl_clientes');
+  const [clis,preciosDB]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_precios')]);
+  const pm={};preciosDB.forEach(p=>pm[p.servicio_id]=p.precio);
   G('ct').innerHTML=`
     <div class="pos-w">
       <div>
@@ -881,7 +905,7 @@ async function pgCaja(){
             <span style="color:var(--g3)">🔍</span>
             <input placeholder="Buscar servicio..." oninput="filtP(this.value)">
           </div>
-          <div id="pcats">${renderPCats(CATS)}</div>
+          <div id="pcats">${renderPCats(CATS,pm)}</div>
         </div>
         <div id="pos-paq" style="display:none">
           ${PAQUETES.map(pk=>`
@@ -921,15 +945,16 @@ async function pgCaja(){
   renderCart();
 }
 
-function renderPCats(cats){
+function renderPCats(cats,pm={}){
   return cats.map(cat=>`
     <div class="pos-cl">${cat}</div>
-    ${CAT.filter(s=>s.cat===cat).map(s=>`
-      <div class="pos-it" onclick="addCart('${s.id}')">
+    ${CAT.filter(s=>s.cat===cat).map(s=>{
+      const p=pm[s.id]??s.price;
+      return`<div class="pos-it" onclick="addCart('${s.id}',${p})">
         <span class="pi-n">${s.name}</span>
-        <span class="pi-p">${s.variable?'Variable':mxn(s.price)}</span>
+        <span class="pi-p">${s.variable?'Variable':mxn(p)}</span>
         <span class="pi-a">+</span>
-      </div>`).join('')}`).join('');
+      </div>`;}).join('')}`).join('');
 }
 
 function posTab(el,tab){
@@ -946,8 +971,9 @@ function filtP(q){
 }
 function setEst(id){selEst=STAFF.find(s=>s.id===id)||null;}
 function setCli(id,name){selCli=id?{id,nombre:name}:null;}
-function addCart(sid){
+function addCart(sid,customPrice){
   const s=CAT.find(x=>x.id===sid);if(!s)return;
+  const price=customPrice??s.price;
   if(s.variable){
     openM(`<div class="mt">Precio para ${s.name}</div>
       <div class="fg"><label class="fl">Precio ($)</label><input class="fc" id="vp" type="number" min="0" placeholder="0"></div>
@@ -959,7 +985,7 @@ function addCart(sid){
   }
   const ex=cart.find(i=>i.id===sid);
   if(ex)ex.qty++;
-  else cart.push({id:sid,name:s.name,price:s.price,qty:1});
+  else cart.push({id:sid,name:s.name,price:price,qty:1});
   renderCart();
 }
 function addVarCart(sid){
@@ -1103,17 +1129,28 @@ async function pgComm(){
 // =============================================================
 async function pgCat(){
   G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewPaq()">+ Nuevo Paquete</button>`;
+  const preciosDB=await dbQ('bl_precios');
+  const pm={};preciosDB.forEach(p=>pm[p.servicio_id]=p.precio);
   let html=`<div class="tabs">`;
   CATS.forEach((cat,i)=>{ html+=`<div class="tab ${i===0?'active':''}" onclick="catTab(this,'cat-${i}')">${cat}</div>`;});
   html+=`<div class="tab" onclick="catTab(this,'cat-paq')">Paquetes</div></div>`;
   CATS.forEach((cat,i)=>{
     html+=`<div id="cat-${i}" ${i>0?'style="display:none"':''}>
       <div class="card">
-        <table><thead><tr><th>Servicio</th><th>Precio</th></tr></thead>
-        <tbody>${CAT.filter(s=>s.cat===cat).map(s=>`<tr>
-          <td>${s.name}</td>
-          <td style="color:var(--gold)">${s.variable?'Variable':mxn(s.price)}</td>
-        </tr>`).join('')}</tbody></table>
+        <div style="font-size:11px;color:var(--g3);margin-bottom:10px">Toca ✏️ para editar el precio manualmente. ↩ para restablecer al original.</div>
+        <table><thead><tr><th>Servicio</th><th>Precio Base</th><th>Precio Actual</th><th></th></tr></thead>
+        <tbody>${CAT.filter(s=>s.cat===cat).map(s=>{
+          const pa=pm[s.id]??s.price;
+          const mod=pm[s.id]!==undefined;
+          return`<tr>
+            <td style="font-size:12px">${s.name}</td>
+            <td style="color:var(--g3);font-size:11px">${s.variable?'Variable':mxn(s.price)}</td>
+            <td style="color:var(--gold);font-weight:${mod?700:400}">${s.variable?'Variable':mxn(pa)}${mod?' <span class="bx bg-gold" style="font-size:8px">MOD</span>':''}</td>
+            <td style="display:flex;gap:4px">
+              <button class="btn bg bsm" onclick="editPrecio('${s.id}','${s.name.replace(/'/g,"\\'")}',${pa})">✏️</button>
+              ${mod?`<button class="btn bd bsm" onclick="resetPrecio('${s.id}')">↩</button>`:''}
+            </td>
+          </tr>`;}).join('')}</tbody></table>
       </div></div>`;
   });
   html+=`<div id="cat-paq" style="display:none">
@@ -1127,13 +1164,40 @@ async function pgCat(){
     </div></div>`;
   G('ct').innerHTML=html;
 }
+
+function editPrecio(id,nombre,actual){
+  openM(`
+    <div class="mt">✏️ Editar Precio</div>
+    <div style="font-size:13px;margin-bottom:14px;color:var(--g2)">${nombre}</div>
+    <div class="fg"><label class="fl">Nuevo precio ($)</label>
+      <input class="fc" id="ep-v" type="number" min="0" value="${actual}"></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="savePrecio('${id}')">Guardar</button>
+    </div>`);
+}
+async function savePrecio(id){
+  const v=parseFloat(G('ep-v')?.value)||0;
+  // Buscar si ya existe
+  const exist=await sb.from('bl_precios').select('id').eq('servicio_id',id).single().catch(()=>({data:null}));
+  if(exist.data){
+    await sb.from('bl_precios').update({precio:v}).eq('servicio_id',id);
+  } else {
+    await dbI('bl_precios',{servicio_id:id,precio:v,created_at:new Date().toISOString()});
+  }
+  toast('Precio actualizado ✓','ok');closeM();pgCat();
+}
+async function resetPrecio(id){
+  await sb.from('bl_precios').delete().eq('servicio_id',id);
+  toast('Precio restablecido ✓','ok');pgCat();
+}
 function catTab(el,id){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
   const allIds=['cat-paq',...CATS.map((_,i)=>`cat-${i}`)];
   allIds.forEach(x=>{const d=G(x);if(d)d.style.display=x===id?'block':'none';});
 }
 function openNewPaq(){
-  toast('Para agregar paquetes, edita el array PAQUETES en el código fuente','');
+  toast('Para agregar paquetes edita el array PAQUETES en el código','');
 }
 
 // =============================================================
@@ -1362,7 +1426,10 @@ async function renderFinDiario(){
             <div style="font-size:13px;font-weight:600;text-transform:capitalize">${fd}</div>
             <div style="font-size:10px;color:var(--g3)">${d.ventas.length} venta(s) · comisiones ${mxn(d.comision)}</div>
           </div>
-          <div style="font-family:var(--fd);font-size:22px;color:var(--gold)">${mxn(d.total)}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn bg bsm" onclick="exportarDia('${dia}')">⬇ Excel</button>
+            <div style="font-family:var(--fd);font-size:22px;color:var(--gold)">${mxn(d.total)}</div>
+          </div>
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
           ${d.efectivo?`<span class="bx bg-gray">💵 ${mxn(d.efectivo)}</span>`:''}
@@ -1573,15 +1640,53 @@ async function delEgreso(id){
 }
 
 // =============================================================
-// REPORTES
+// EXPORTAR EXCEL
 // =============================================================
+function exportarExcel(ventas, nombreArchivo){
+  // Construir CSV con BOM para Excel en español
+  const BOM = '\uFEFF';
+  const headers = ['Fecha','Hora','Estilista','Clienta','Servicios','Subtotal','Descuento','Total','Método de Pago','Comisión'];
+  const rows = ventas.map(v=>[
+    new Date(v.created_at).toLocaleDateString('es-MX'),
+    new Date(v.created_at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+    v.estilista_nombre||'—',
+    v.cliente_nombre||'—',
+    (v.items||[]).map(i=>i.name+(i.qty>1?' x'+i.qty:'')).join(' / '),
+    v.subtotal||0,
+    v.descuento||0,
+    v.total||0,
+    v.metodo_pago||'—',
+    v.comision||0
+  ]);
+  const csv = BOM + [headers, ...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=nombreArchivo+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Excel descargado ✓','ok');
+}
+
+async function exportarDia(fecha){
+  const ventas=await dbQ('bl_ventas');
+  const vDia=ventas.filter(v=>isoD(v.created_at)===fecha);
+  if(!vDia.length){toast('Sin ventas ese día','err');return;}
+  exportarExcel(vDia,`BeautyLab_Ventas_${fecha}`);
+}
+
+async function exportarMes(mes){
+  const ventas=await dbQ('bl_ventas');
+  const vMes=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  if(!vMes.length){toast('Sin ventas ese mes','err');return;}
+  exportarExcel(vMes,`BeautyLab_Ventas_${mes}`);
+}
 async function pgRep(){
+  const mesOpt=Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
+    const v=d.toISOString().slice(0,7);
+    return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('');
   G('tba').innerHTML=`
-    <select class="fc" id="rep-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgRep()">
-      ${Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
-        const v=d.toISOString().slice(0,7);
-        return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('')}
-    </select>`;
+    <select class="fc" id="rep-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgRep()">${mesOpt}</select>
+    <button class="btn bg bsm" onclick="exportarMes(G('rep-mes').value)">⬇ Excel</button>`;
   const mes=G('rep-mes')?.value||new Date().toISOString().slice(0,7);
   const [ventas,citas,clis]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_citas'),dbQ('bl_clientes')]);
   const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
@@ -2026,6 +2131,13 @@ async function renderNomHist(){
       </div>`;}).join('')}`;
 }
 
+// create table if not exists bl_precios (
+//   id uuid primary key default gen_random_uuid(),
+//   created_at timestamptz default now(),
+//   servicio_id text unique, precio numeric
+// );
+// alter table bl_precios enable row level security;
+// create policy "open_all" on bl_precios for all using (true) with check (true);
 // =============================================================
 // SQL adicional para Supabase (agregar a las tablas existentes):
 // create table if not exists bl_nominas (
