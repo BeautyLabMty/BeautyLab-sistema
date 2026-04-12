@@ -1012,17 +1012,44 @@ function renderCart(){
   const ci=G('cart-items'),cs=G('cart-sub'),ct=G('cart-tot');
   if(ci)ci.innerHTML=cart.length?cart.map(i=>`
     <div class="ci">
-      <div class="ci-n">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}</div>
+      <div class="ci-n" style="flex:1">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}</div>
       <div class="ci-qty">
         <button class="qb" onclick="qtyCart('${i.id}',-1)">−</button>
         <span style="font-size:12px;min-width:14px;text-align:center">${i.qty}</span>
         <button class="qb" onclick="qtyCart('${i.id}',1)">+</button>
       </div>
-      <div class="ci-p">${mxn(i.price*i.qty)}</div>
+      <div class="ci-p" onclick="editCartPrice('${i.id}')" style="cursor:pointer;text-decoration:underline dotted;min-width:60px;text-align:right" title="Toca para editar precio">${mxn(i.price*i.qty)}</div>
     </div>`).join('')
   :'<div class="empty" style="padding:12px"><div class="et">Sin servicios</div></div>';
   if(cs)cs.textContent=mxn(sub);
   if(ct)ct.textContent=mxn(tot);
+}
+
+function editCartPrice(id){
+  const item=cart.find(x=>x.id===id);if(!item)return;
+  openM(`
+    <div class="mt">✏️ Ajustar Precio</div>
+    <div style="font-size:13px;color:var(--g2);margin-bottom:14px">${item.name}</div>
+    <div class="fg"><label class="fl">Precio base</label>
+      <div style="font-size:13px;color:var(--g3);padding:8px 0">${mxn(item.price)} por unidad</div>
+    </div>
+    <div class="fg"><label class="fl">Nuevo precio ($) *</label>
+      <input class="fc" id="ecp-v" type="number" min="0" value="${item.price}" placeholder="Ej: 850">
+    </div>
+    <div style="font-size:11px;color:var(--g3);margin-bottom:14px">Puedes subir el precio por cabello más largo, trabajo extra, etc.</div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="applyCartPrice('${id}')">Aplicar</button>
+    </div>`);
+}
+
+function applyCartPrice(id){
+  const v=parseFloat(G('ecp-v')?.value)||0;
+  if(!v){toast('Precio inválido','err');return;}
+  const item=cart.find(x=>x.id===id);
+  if(item){item.price=v;}
+  closeM();renderCart();
+  toast('Precio actualizado ✓','ok');
 }
 function clearCart(){cart=[];renderCart();}
 
