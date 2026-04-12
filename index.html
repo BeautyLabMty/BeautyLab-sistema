@@ -927,28 +927,28 @@ async function pgCaja(){
             </div>`).join('')}
         </div>
         <div id="pos-joyeria" style="display:none">
-          ${joyeria.length?joyeria.map(p=>`
-            <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
-              <div style="flex:1">
-                <div class="pi-n">${p.nombre}</div>
-                <div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div>
-              </div>
-              <span class="pi-p">${mxn(p.precio_venta)}</span>
-              <span class="pi-a">+</span>
-            </div>`).join('')
-          :`<div class="empty" style="padding:20px"><div class="ei">💍</div><div class="et">Agrega joyería en Inventario con categoría "Joyería" y precio de venta</div></div>`}
+          <div style="padding:10px 0">
+            <button class="btn bp" style="width:100%;margin-bottom:10px" onclick="addProductoRapido('💍 Joyería')">+ Agregar Joyería</button>
+            ${joyeria.length?`<div style="font-size:9px;color:var(--g3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Del inventario</div>`:''}
+            ${joyeria.map(p=>`
+              <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
+                <div style="flex:1"><div class="pi-n">${p.nombre}</div><div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div></div>
+                <span class="pi-p">${mxn(p.precio_venta)}</span>
+                <span class="pi-a">+</span>
+              </div>`).join('')}
+          </div>
         </div>
         <div id="pos-prodpelo" style="display:none">
-          ${prodPelo.length?prodPelo.map(p=>`
-            <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
-              <div style="flex:1">
-                <div class="pi-n">${p.nombre}</div>
-                <div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div>
-              </div>
-              <span class="pi-p">${mxn(p.precio_venta)}</span>
-              <span class="pi-a">+</span>
-            </div>`).join('')
-          :`<div class="empty" style="padding:20px"><div class="ei">💆</div><div class="et">Agrega productos en Inventario con categoría "Productos Pelo" y precio de venta</div></div>`}
+          <div style="padding:10px 0">
+            <button class="btn bp" style="width:100%;margin-bottom:10px" onclick="addProductoRapido('💆 Producto Pelo')">+ Agregar Producto</button>
+            ${prodPelo.length?`<div style="font-size:9px;color:var(--g3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Del inventario</div>`:''}
+            ${prodPelo.map(p=>`
+              <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
+                <div style="flex:1"><div class="pi-n">${p.nombre}</div><div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div></div>
+                <span class="pi-p">${mxn(p.precio_venta)}</span>
+                <span class="pi-a">+</span>
+              </div>`).join('')}
+          </div>
         </div>
       </div>
       <div>
@@ -1005,7 +1005,33 @@ async function saveNewCliCaja(){
     pgCaja(); // recargar caja con nueva clienta seleccionada
   }
 }
-async function addInvCart(invId,name,price){
+function addProductoRapido(tipo){
+  openM(`
+    <div class="mt">${tipo}</div>
+    <div class="fg"><label class="fl">Descripción *</label>
+      <input class="fc" id="pr-n" placeholder="Ej: Aretes dorados, Shampoo Alfaparf 300ml...">
+    </div>
+    <div class="fg"><label class="fl">Precio ($) *</label>
+      <input class="fc" id="pr-p" type="number" min="0" placeholder="0">
+    </div>
+    <div class="fg"><label class="fl">Cantidad</label>
+      <input class="fc" id="pr-q" type="number" min="1" value="1">
+    </div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveProductoRapido('${tipo}')">Agregar al Carrito</button>
+    </div>`);
+}
+function saveProductoRapido(tipo){
+  const n=G('pr-n')?.value?.trim();
+  const p=parseFloat(G('pr-p')?.value)||0;
+  const q=parseInt(G('pr-q')?.value)||1;
+  if(!n){toast('Escribe una descripción','err');return;}
+  if(!p){toast('Escribe el precio','err');return;}
+  cart.push({id:'prod_'+Date.now(),name:n,price:p,qty:q,tipo});
+  closeM();renderCart();
+  toast(`${n} agregado ✓`,'ok');
+}
   cart.push({id:'inv_'+invId+'_'+Date.now(),name,price,qty:1,invId});
   renderCart();
   toast(`${name} agregado ✓`,'ok');
