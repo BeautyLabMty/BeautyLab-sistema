@@ -852,6 +852,7 @@ async function updateCli(id){
     email:G('ec-e')?.value,cumpleanos:G('ec-b')?.value,notas:G('ec-no')?.value});
   if(ok){toast('Clienta actualizada ✓','ok');closeM();pgCli();}
 }
+async function verCli(id){
   const[clis,citas,ventas]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_citas',{cliente_id:id}),dbQ('bl_ventas',{cliente_id:id})]);
   const cl=clis.find(c=>c.id===id);if(!cl)return;
   const tot=ventas.reduce((s,v)=>s+(v.total||0),0);
