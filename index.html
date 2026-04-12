@@ -1024,6 +1024,7 @@ async function descontarInventario(items){
     }
   }
 }
+function renderPCats(cats,pm={}){
   return cats.map(cat=>`
     <div class="pos-cl">${cat}</div>
     ${CAT.filter(s=>s.cat===cat).map(s=>{
