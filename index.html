@@ -440,6 +440,15 @@ let cart=[], selEst=null, selCli=null;
 let agDate=new Date();
 let _cSvcs=[];
 
+// =============================================================
+// HELPERS
+// =============================================================
+const G=id=>document.getElementById(id);
+const $=q=>document.querySelector(q);
+const mxn=n=>`$${Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+const isoD=d=>new Date(d).toISOString().split('T')[0];
+const today=()=>isoD(new Date());
+
 // INIT
 window.addEventListener('DOMContentLoaded',()=>{
   if(location.search.includes('booking')||location.hash.includes('booking')){showBooking();return;}
@@ -504,14 +513,6 @@ function navigate(p){
 }
 function toggleSB(){SBO=!SBO;G('sb').classList.toggle('open',SBO);}
 
-// =============================================================
-// HELPERS
-// =============================================================
-const G=id=>document.getElementById(id);
-const $=q=>document.querySelector(q);
-const mxn=n=>`$${Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
-const isoD=d=>new Date(d).toISOString().split('T')[0];
-const today=()=>isoD(new Date());
 function toast(msg,t=''){
   const el=G('toast'); el.textContent=msg;
   el.className='show'+(t?' '+t:'');
