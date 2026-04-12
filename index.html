@@ -879,8 +879,10 @@ async function verCli(id){
 // =============================================================
 async function pgCaja(){
   if(!selEst&&CU.role!=='admin')selEst=CU;
-  const [clis,preciosDB]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_precios')]);
+  const [clis,preciosDB,invDB]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_precios'),dbQ('bl_inventario')]);
   const pm={};preciosDB.forEach(p=>pm[p.servicio_id]=p.precio);
+  const joyeria=invDB.filter(p=>p.categoria==='Joyería'&&p.precio_venta>0&&p.stock>0);
+  const prodPelo=invDB.filter(p=>p.categoria==='Productos Pelo'&&p.precio_venta>0&&p.stock>0);
   G('ct').innerHTML=`
     <div class="pos-w">
       <div>
@@ -903,6 +905,8 @@ async function pgCaja(){
         <div class="tabs">
           <div class="tab active" onclick="posTab(this,'svcs')">Servicios</div>
           <div class="tab" onclick="posTab(this,'paquetes')">Paquetes</div>
+          <div class="tab" onclick="posTab(this,'joyeria')">Joyería</div>
+          <div class="tab" onclick="posTab(this,'prodpelo')">Prod. Pelo</div>
         </div>
         <div id="pos-svcs">
           <div class="sbox" style="margin-bottom:9px">
@@ -921,6 +925,30 @@ async function pgCaja(){
               <span class="pi-p">${mxn(pk.price)}</span>
               <span class="pi-a">+</span>
             </div>`).join('')}
+        </div>
+        <div id="pos-joyeria" style="display:none">
+          ${joyeria.length?joyeria.map(p=>`
+            <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
+              <div style="flex:1">
+                <div class="pi-n">${p.nombre}</div>
+                <div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div>
+              </div>
+              <span class="pi-p">${mxn(p.precio_venta)}</span>
+              <span class="pi-a">+</span>
+            </div>`).join('')
+          :`<div class="empty" style="padding:20px"><div class="ei">💍</div><div class="et">Agrega joyería en Inventario con categoría "Joyería" y precio de venta</div></div>`}
+        </div>
+        <div id="pos-prodpelo" style="display:none">
+          ${prodPelo.length?prodPelo.map(p=>`
+            <div class="pos-it" onclick="addInvCart('${p.id}','${p.nombre.replace(/'/g,"\\'")}',${p.precio_venta})">
+              <div style="flex:1">
+                <div class="pi-n">${p.nombre}</div>
+                <div style="font-size:10px;color:var(--g3)">Stock: ${p.stock}</div>
+              </div>
+              <span class="pi-p">${mxn(p.precio_venta)}</span>
+              <span class="pi-a">+</span>
+            </div>`).join('')
+          :`<div class="empty" style="padding:20px"><div class="ei">💆</div><div class="et">Agrega productos en Inventario con categoría "Productos Pelo" y precio de venta</div></div>`}
         </div>
       </div>
       <div>
@@ -977,7 +1005,25 @@ async function saveNewCliCaja(){
     pgCaja(); // recargar caja con nueva clienta seleccionada
   }
 }
-function renderPCats(cats,pm={}){
+async function addInvCart(invId,name,price){
+  cart.push({id:'inv_'+invId+'_'+Date.now(),name,price,qty:1,invId});
+  renderCart();
+  toast(`${name} agregado ✓`,'ok');
+}
+
+// Al cobrar, descontar stock de productos de inventario
+async function descontarInventario(items){
+  for(const item of items){
+    if(item.invId){
+      const prods=await dbQ('bl_inventario');
+      const prod=prods.find(p=>p.id===item.invId);
+      if(prod){
+        const nuevoStock=Math.max(0,(prod.stock||0)-item.qty);
+        await dbU('bl_inventario',item.invId,{stock:nuevoStock});
+      }
+    }
+  }
+}
   return cats.map(cat=>`
     <div class="pos-cl">${cat}</div>
     ${CAT.filter(s=>s.cat===cat).map(s=>{
@@ -992,8 +1038,14 @@ function renderPCats(cats,pm={}){
 function posTab(el,tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  G('pos-svcs').style.display=tab==='svcs'?'block':'none';
-  G('pos-paq').style.display=tab==='paquetes'?'block':'none';
+  ['pos-svcs','pos-paq','pos-joyeria','pos-prodpelo'].forEach(id=>{
+    const d=G(id);if(d)d.style.display=id==='pos-'+tab||id===tab?'block':'none';
+  });
+  // mapeo de tab ids
+  const map={svcs:'pos-svcs',paquetes:'pos-paq',joyeria:'pos-joyeria',prodpelo:'pos-prodpelo'};
+  ['pos-svcs','pos-paq','pos-joyeria','pos-prodpelo'].forEach(id=>{
+    const d=G(id);if(d)d.style.display=map[tab]===id?'block':'none';
+  });
 }
 function filtP(q){
   const pc=G('pcats');if(!pc)return;
@@ -1098,7 +1150,10 @@ async function cobrar(){
     items:cart,subtotal:sub,descuento:desc,total:tot,metodo_pago:pago,
     comision:comm,created_at:new Date().toISOString()
   });
-  if(venta){showTicket(venta);cart=[];selCli=null;}
+  if(venta){
+    await descontarInventario(cart);
+    showTicket(venta);cart=[];selCli=null;
+  }
 }
 
 function showTicket(v){
@@ -1269,7 +1324,7 @@ async function pgInv(){
     <div class="card">
       <div class="ct2">Inventario de Productos</div>
       ${prods.length?`<div class="tw"><table>
-        <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Alerta</th><th></th></tr></thead>
+        <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio Venta</th><th>Alerta</th><th></th></tr></thead>
         <tbody>${prods.map(p=>{
           const low=p.stock<=p.minimo;
           return`<tr>
@@ -1278,6 +1333,7 @@ async function pgInv(){
             <td style="font-family:var(--fd);font-size:18px;color:${low?'var(--red)':'var(--gold)'}">${p.stock}</td>
             <td style="font-size:11px;color:var(--g3)">${p.minimo||0}</td>
             <td style="font-size:12px">${p.costo?mxn(p.costo):'—'}</td>
+            <td style="font-size:12px;color:var(--gold)">${p.precio_venta?mxn(p.precio_venta):'—'}</td>
             <td>${low?`<span class="bx bg-red">⚠ Bajo</span>`:`<span class="bx bg-green">OK</span>`}</td>
             <td style="display:flex;gap:5px">
               <button class="btn bg bsm" onclick="ajustarStock('${p.id}',${p.stock})">Ajustar</button>
@@ -1294,8 +1350,13 @@ function openNewProd(){
     <div class="fr">
       <div class="fg"><label class="fl">Categoría</label>
         <select class="fc" id="np-c">
-          <option>Shampoo/Acondicionador</option><option>Tintes</option><option>Tratamientos</option>
-          <option>Herramientas</option><option>Uñas</option><option>Maquillaje</option><option>Otro</option>
+          <option>Shampoo/Acondicionador</option>
+          <option>Tintes</option><option>Tratamientos</option>
+          <option>Herramientas</option><option>Uñas</option>
+          <option>Maquillaje</option>
+          <option>Joyería</option>
+          <option>Productos Pelo</option>
+          <option>Otro</option>
         </select></div>
       <div class="fg"><label class="fl">Stock actual</label><input class="fc" id="np-s" type="number" min="0" value="0"></div>
     </div>
@@ -1303,6 +1364,8 @@ function openNewProd(){
       <div class="fg"><label class="fl">Stock mínimo (alerta)</label><input class="fc" id="np-m" type="number" min="0" value="2"></div>
       <div class="fg"><label class="fl">Costo unitario ($)</label><input class="fc" id="np-p" type="number" min="0"></div>
     </div>
+    <div class="fg"><label class="fl">Precio de venta ($) <span style="color:var(--gold)">— aparece en Caja</span></label>
+      <input class="fc" id="np-pv" type="number" min="0" placeholder="0 = no aparece en Caja"></div>
     <div class="fg"><label class="fl">Notas</label><input class="fc" id="np-no" placeholder="Proveedor, referencia..."></div>
     <div class="ma">
       <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
@@ -1314,8 +1377,9 @@ async function saveProd(){
   if(!n){toast('Nombre requerido','err');return;}
   const r=await dbI('bl_inventario',{nombre:n,categoria:G('np-c')?.value,
     stock:parseInt(G('np-s')?.value)||0,minimo:parseInt(G('np-m')?.value)||2,
-    costo:parseFloat(G('np-p')?.value)||0,notas:G('np-no')?.value,
-    created_at:new Date().toISOString()});
+    costo:parseFloat(G('np-p')?.value)||0,
+    precio_venta:parseFloat(G('np-pv')?.value)||0,
+    notas:G('np-no')?.value,created_at:new Date().toISOString()});
   if(r){toast('Producto guardado ✓','ok');closeM();pgInv();}
 }
 function ajustarStock(id,actual){
