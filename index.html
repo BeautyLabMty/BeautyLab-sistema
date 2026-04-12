@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Beauty Lab · Sistema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060606;--bg2:#0f0f0f;--bg3:#181818;
+  --gold:#C9A452;--gold2:#E8C87A;--gd:rgba(201,164,82,0.12);--gb:rgba(201,164,82,0.22);
+  --w:#fff;--g1:#d8d8d8;--g2:#888;--g3:#444;
+  --border:#1e1e1e;--red:#f06060;--green:#5EE087;--blue:#64b5ff;
+  --fd:'Cormorant Garamond',Georgia,serif;--fb:'Outfit',sans-serif;
+  --r:10px;--sw:220px;--tr:.16s ease;
+}
+html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* LOGIN */
+#ls{display:flex;align-items:center;justify-content:center;height:100vh;
+  background:radial-gradient(ellipse 80% 60% at 30% 70%,rgba(201,164,82,.07),transparent)}
+.lb{width:340px;padding:46px 36px;background:var(--bg2);border:1px solid var(--gb);border-radius:18px;
+  text-align:center;box-shadow:0 28px 80px rgba(0,0,0,.8)}
+.lm{font-family:var(--fd);font-size:52px;font-weight:300;color:var(--gold);letter-spacing:-2px}
+.ln{font-family:var(--fd);font-size:11px;letter-spacing:7px;text-transform:uppercase;color:var(--g2);margin-top:2px}
+.ls2{font-size:9px;color:var(--g3);margin-top:3px;letter-spacing:2px;text-transform:uppercase}
+.ll{width:32px;height:1px;background:var(--gb);margin:22px auto}
+.li{width:100%;padding:11px 14px;margin-bottom:9px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);color:var(--w);font-family:var(--fb);font-size:14px;outline:none;transition:border-color var(--tr)}
+.li:focus{border-color:var(--gold)}
+.li::placeholder{color:var(--g3)}
+.lb-btn{width:100%;padding:12px;background:var(--gold);border:none;border-radius:var(--r);
+  color:#060606;font-family:var(--fb);font-size:12px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;transition:background var(--tr)}
+.lb-btn:hover{background:var(--gold2)}
+.le{font-size:12px;color:var(--red);margin-top:8px;min-height:16px}
+
+/* APP */
+#app{display:none;height:100vh;flex-direction:row}
+
+/* SIDEBAR */
+.sb{width:var(--sw);min-width:var(--sw);height:100vh;background:var(--bg2);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-top{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:var(--fd);font-size:26px;color:var(--gold);font-weight:300;letter-spacing:-1px}
+.sb-name{font-size:9px;letter-spacing:6px;text-transform:uppercase;color:var(--g2);margin-top:2px;font-family:var(--fd)}
+.sb-nav{flex:1;padding:8px 0}
+.nl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--g3);padding:12px 18px 4px;font-weight:600}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;font-size:12.5px;
+  color:var(--g2);transition:all var(--tr);border-left:2px solid transparent;user-select:none}
+.ni:hover{color:var(--w);background:rgba(255,255,255,.02)}
+.ni.active{color:var(--gold);border-left-color:var(--gold);background:var(--gd);font-weight:500}
+.ni-ic{font-size:14px;width:18px;text-align:center}
+.sb-u{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.sb-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#060606;flex-shrink:0}
+.sb-ui{flex:1;min-width:0}
+.sb-un{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-ur{font-size:9px;color:var(--g3);margin-top:1px}
+.sb-out{font-size:16px;cursor:pointer;color:var(--g3);transition:color var(--tr);padding:3px}
+.sb-out:hover{color:var(--red)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tb{padding:0 22px;height:52px;min-height:52px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.tb-t{font-family:var(--fd);font-size:21px;font-weight:400}
+.tb-a{display:flex;gap:7px}
+.ct{flex:1;overflow-y:auto;padding:20px 22px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.ct2{font-family:var(--fd);font-size:14px;color:var(--g1);margin-bottom:12px;
+  padding-bottom:9px;border-bottom:1px solid var(--border)}
+
+/* KPI */
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kp{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden}
+.kp::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold)}
+.kl{font-size:9px;color:var(--g3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.kv{font-family:var(--fd);font-size:24px;font-weight:300;color:var(--gold)}
+.ks{font-size:10px;color:var(--g3);margin-top:2px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:var(--r);
+  font-family:var(--fb);font-size:12.5px;font-weight:500;cursor:pointer;border:none;
+  transition:all var(--tr);user-select:none;white-space:nowrap}
+.bp{background:var(--gold);color:#060606}.bp:hover{background:var(--gold2)}
+.bg{background:transparent;color:var(--g2);border:1px solid var(--border)}.bg:hover{border-color:var(--gold);color:var(--gold)}
+.bd{background:rgba(240,96,96,.1);color:var(--red);border:1px solid rgba(240,96,96,.2)}.bd:hover{background:rgba(240,96,96,.2)}
+.bsm{padding:6px 11px;font-size:11.5px}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fl{font-size:10px;color:var(--g2);margin-bottom:4px;display:block;letter-spacing:.4px}
+.fc{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);color:var(--w);font-family:var(--fb);font-size:13px;
+  transition:border-color var(--tr);outline:none}
+.fc:focus{border-color:var(--gold)}
+.fc::placeholder{color:var(--g3)}
+select.fc option{background:var(--bg3)}
+textarea.fc{resize:vertical;min-height:58px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.82);
+  backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mox{background:var(--bg2);border:1px solid var(--gb);border-radius:14px;padding:24px;
+  width:450px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 70px rgba(0,0,0,.8)}
+.mt{font-family:var(--fd);font-size:19px;color:var(--w);margin-bottom:16px;
+  padding-bottom:12px;border-bottom:1px solid var(--border)}
+.ma{display:flex;gap:7px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 11px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--g3);font-weight:600;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+tbody td{padding:10px 11px;font-size:13px;color:var(--g1);border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+tbody tr:last-child td{border-bottom:none}
+
+/* BADGE */
+.bx{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap}
+.bg-gold{background:var(--gd);color:var(--gold);border:1px solid var(--gb)}
+.bg-green{background:rgba(94,224,135,.1);color:var(--green);border:1px solid rgba(94,224,135,.2)}
+.bg-red{background:rgba(240,96,96,.1);color:var(--red);border:1px solid rgba(240,96,96,.2)}
+.bg-gray{background:rgba(255,255,255,.05);color:var(--g2);border:1px solid var(--border)}
+.bg-blue{background:rgba(100,181,255,.1);color:var(--blue);border:1px solid rgba(100,181,255,.2)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:4px 9px;border-radius:20px;font-size:11px;background:var(--bg3);
+  border:1px solid var(--border);cursor:pointer;transition:all var(--tr);user-select:none}
+.chip:hover,.chip.sel{background:var(--gd);border-color:var(--gold);color:var(--gold)}
+
+/* AGENDA */
+.ag-nav{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.ag-dt{font-family:var(--fd);font-size:19px;flex:1}
+.ag-grid{display:grid;gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden}
+.ag-col{background:var(--bg2)}
+.ag-hdr{padding:10px 12px;text-align:center;font-size:12px;font-weight:600;
+  border-bottom:2px solid;letter-spacing:.3px}
+.ag-slots{padding:7px;min-height:340px}
+.ag-slot{border-radius:6px;padding:7px 9px;margin-bottom:5px;cursor:pointer;
+  border-left:3px solid;transition:opacity var(--tr),transform .1s}
+.ag-slot:hover{opacity:.78;transform:translateX(2px)}
+.sl-t{font-size:9px;opacity:.55;margin-bottom:2px}
+.sl-n{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sl-s{font-size:10px;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.ag-add{width:100%;padding:7px;text-align:center;font-size:10px;color:var(--g3);
+  cursor:pointer;border:1px dashed var(--border);border-radius:6px;
+  transition:all var(--tr);margin-top:3px}
+.ag-add:hover{border-color:var(--gold);color:var(--gold);background:var(--gd)}
+
+/* POS */
+.pos-w{display:grid;grid-template-columns:1fr 290px;gap:12px}
+.pos-cl{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--g3);
+  padding:7px 0;margin-top:5px;border-top:1px solid var(--border)}
+.pos-it{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:6px;cursor:pointer;transition:background var(--tr)}
+.pos-it:hover{background:var(--bg3)}
+.pi-n{font-size:13px;flex:1}
+.pi-p{font-size:12px;color:var(--gold);font-weight:500;white-space:nowrap}
+.pi-a{font-size:17px;color:var(--g3);transition:color var(--tr)}
+.pos-it:hover .pi-a{color:var(--gold)}
+.ci{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border)}
+.ci-n{flex:1;font-size:12px;line-height:1.3}
+.ci-qty{display:flex;align-items:center;gap:4px}
+.qb{width:19px;height:19px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);
+  color:var(--w);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all var(--tr)}
+.qb:hover{border-color:var(--gold);color:var(--gold)}
+.ci-p{font-size:12px;color:var(--gold);min-width:52px;text-align:right}
+.ct-row{padding:9px 0;display:flex;justify-content:space-between;align-items:center}
+.ct-l{font-size:13px;color:var(--g2)}
+.ct-v{font-family:var(--fd);font-size:22px;color:var(--gold)}
+
+/* TICKET */
+#tkov{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.92);
+  align-items:center;justify-content:center}
+#tkov.open{display:flex}
+.tck{background:#fff;color:#111;padding:26px;width:290px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px}
+.th{text-align:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed #ccc}
+.th-l{font-size:16px;font-weight:700;letter-spacing:4px}
+.th-s{font-size:8px;letter-spacing:2px;color:#777;margin-top:2px}
+.tr2{display:flex;justify-content:space-between;padding:2px 0}
+.tr2.tot{font-weight:700;border-top:1px dashed #ccc;margin-top:6px;padding-top:6px;font-size:12px}
+.tf{text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc;font-size:8px;color:#999}
+.tck-a{margin-top:12px;display:flex;gap:7px;justify-content:center}
+
+/* TOAST */
+#toast{position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--bg2);
+  border:1px solid var(--gb);border-radius:var(--r);padding:10px 15px;
+  font-size:12.5px;opacity:0;transition:opacity .28s;pointer-events:none;
+  box-shadow:0 6px 24px rgba(0,0,0,.6)}
+#toast.show{opacity:1}
+#toast.err{border-color:rgba(240,96,96,.4);color:var(--red)}
+#toast.ok{border-color:rgba(94,224,135,.4);color:var(--green)}
+
+/* EMPTY */
+.empty{text-align:center;padding:34px;color:var(--g3)}
+.ei{font-size:26px;margin-bottom:7px}
+.et{font-size:12px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto}
+.tab{padding:8px 14px;font-size:12.5px;color:var(--g3);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--tr);user-select:none;white-space:nowrap}
+.tab:hover{color:var(--w)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* SBOX */
+.sbox{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px}
+.sbox input{background:none;border:none;outline:none;color:var(--w);font-family:var(--fb);font-size:13px;flex:1}
+.sbox input::placeholder{color:var(--g3)}
+
+/* HAMBURGER */
+.ham{display:none}
+
+/* BOOKING */
+#bks{display:none;min-height:100vh;overflow-y:auto;
+  background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 50% 30%,rgba(201,164,82,.06),transparent)}
+.bk-h{text-align:center;padding:40px 20px 24px;border-bottom:1px solid var(--border)}
+.bk-logo{font-family:var(--fd);font-size:44px;color:var(--gold);font-weight:300;letter-spacing:-2px}
+.bk-brand{font-family:var(--fd);letter-spacing:7px;text-transform:uppercase;color:var(--g2);font-size:12px;margin-top:4px}
+.bk-w{max-width:520px;margin:0 auto;padding:26px 18px 56px}
+.bk-step{display:none}
+.bk-step.active{display:block}
+.bk-t{font-family:var(--fd);font-size:22px;margin-bottom:16px}
+.bk-sg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.bk-s{padding:11px 9px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--bg2);cursor:pointer;text-align:center;transition:all var(--tr)}
+.bk-s:hover,.bk-s.sel{border-color:var(--gold);background:var(--gd)}
+.bk-sn{font-size:11px}
+.bk-sp{font-size:10px;color:var(--gold);margin-top:2px}
+
+@media(max-width:768px){
+  :root{--sw:0px}
+  .sb{position:fixed;left:-240px;z-index:500;width:240px;transition:left .26s ease}
+  .sb.open{left:0;box-shadow:0 0 50px rgba(0,0,0,.9)}
+  .ham{display:flex;align-items:center;justify-content:center;width:32px;height:32px;cursor:pointer;font-size:17px}
+  .pos-w{grid-template-columns:1fr}
+  .fr{grid-template-columns:1fr}
+  .kg{grid-template-columns:1fr 1fr}
+  .ct{padding:13px}
+  .tb{padding:0 13px}
+  .ag-grid{grid-template-columns:1fr!important}
+  .bk-sg{grid-template-columns:1fr}
+}
+@media(max-width:480px){.kg{grid-template-columns:1fr}.lb{padding:32px 20px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lb">
+    <div class="lm">BLA</div>
+    <div class="ln">Beauty Lab</div>
+    <div class="ls2">Sistema Operativo</div>
+    <div class="ll"></div>
+    <input class="li" id="li-e" type="email" placeholder="Correo electrónico" autocomplete="email">
+    <input class="li" id="li-p" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button class="lb-btn" onclick="doLogin()">Entrar</button>
+    <div class="le" id="le"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sb" id="sb">
+    <div class="sb-top">
+      <div class="sb-logo">BKA</div>
+      <div class="sb-name">Beauty Lab</div>
+    </div>
+    <nav class="sb-nav" id="sbnav"></nav>
+    <div class="sb-u">
+      <div class="sb-av" id="sbav"></div>
+      <div class="sb-ui"><div class="sb-un" id="sbun"></div><div class="sb-ur" id="sbur"></div></div>
+      <span class="sb-out" onclick="doLogout()" title="Salir">⏏</span>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="tb">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span class="ham" onclick="toggleSB()">☰</span>
+        <div class="tb-t" id="tbt">Dashboard</div>
+      </div>
+      <div class="tb-a" id="tba"></div>
+    </div>
+    <div class="ct" id="ct"><div class="empty"><div class="et">Cargando...</div></div></div>
+  </div>
+</div>
+
+<!-- TICKET OVERLAY -->
+<div id="tkov">
+  <div>
+    <div class="tck" id="tkcnt"></div>
+    <div class="tck-a">
+      <button class="btn bg bsm" onclick="closeTk()">Cerrar</button>
+      <button class="btn bp bsm" onclick="printTk()">🖨 Imprimir</button>
+      <button class="btn bg bsm" onclick="newSale()">+ Nueva venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div class="mo" id="mo"><div class="mox" id="mc"></div></div>
+
+<!-- BOOKING -->
+<div id="bks">
+  <div class="bk-h">
+    <div class="bk-logo">BKA</div>
+    <div class="bk-brand">Beauty Lab · Salon de Belleza</div>
+    <div style="font-size:9px;color:var(--g3);margin-top:5px;letter-spacing:2px">AGENDAR CITA EN LÍNEA</div>
+  </div>
+  <div class="bk-w" id="bkw"></div>
+</div>
+
+<script>
+// =============================================================
+// BEAUTY LAB · SISTEMA OPERATIVO v1.0
+// =============================================================
+const SURL = 'https://ofozkxiepupfgiglpjap.supabase.co';
+const SKEY = 'sb_publishable_ZYlhzSZzv8TGWJHJvh0EFg_EO_DRqgO';
+const sb = window.supabase.createClient(SURL, SKEY);
+
+// STAFF
+const STAFF = [
+  {id:'katy',   name:'Katy',   role:'admin', email:'katy@beautylab.mx',   pw:'BL-Katy2026',   salary:0,    comm:0,    color:'#C9A452'},
+  {id:'yara',   name:'Yara',   role:'senior',email:'yara@beautylab.mx',   pw:'BL-Yara2026',   salary:4000, comm:.15,  color:'#A78BFA'},
+  {id:'laura',  name:'Laura',  role:'nails', email:'laura@beautylab.mx',  pw:'BL-Laura2026',  salary:3200, comm:.10,  color:'#F9A8D4'},
+  {id:'valeria',name:'Valeria',role:'jr',    email:'valeria@beautylab.mx',pw:'BL-Valeria2026',salary:3300, comm:.10,  color:'#6EE7B7'},
+];
+const STYLISTS = STAFF.filter(s=>s.role!=='admin');
+const ROLES = {admin:'Administradora',senior:'Estilista Senior',nails:'Nails',jr:'Estilista Jr.'};
+
+// CATÁLOGO
+const CAT = [
+  {id:'c1', cat:'Cortes',          name:'Corte de Dama',                    price:540},
+  {id:'c2', cat:'Cortes',          name:'Corte de Caballero',               price:320},
+  {id:'c3', cat:'Cortes',          name:'Despunte',                         price:400},
+  {id:'p1', cat:'Peinados',        name:'Peinado Elaborado',                price:650},
+  {id:'p2', cat:'Peinados',        name:'Secado Estilizado',                price:350},
+  {id:'p3', cat:'Peinados',        name:'Ondas Wave',                       price:300},
+  {id:'p4', cat:'Peinados',        name:'Planchado',                        price:300},
+  {id:'e1', cat:'Extras',          name:'Lavado de Cabello',                price:100},
+  {id:'d1', cat:'Depilaciones',    name:'Ceja',                             price:200},
+  {id:'d2', cat:'Depilaciones',    name:'Bozo',                             price:100},
+  {id:'d3', cat:'Depilaciones',    name:'Patilla',                          price:150},
+  {id:'d4', cat:'Depilaciones',    name:'Cara Completa',                    price:350},
+  {id:'d5', cat:'Depilaciones',    name:'Laminado de Ceja',                 price:650},
+  {id:'d6', cat:'Depilaciones',    name:'Lifting',                          price:650},
+  {id:'d7', cat:'Depilaciones',    name:'Cejas HD (Laminado + Henna)',      price:750},
+  {id:'m1', cat:'Maquillaje',      name:'Maquillaje Social + Waves',        price:1500},
+  {id:'m2', cat:'Maquillaje',      name:'Maquillaje Ojos + Pestañas',       price:800},
+  {id:'m3', cat:'Maquillaje',      name:'Paquete Novia / XV Años',          price:0,  variable:true},
+  {id:'t1', cat:'Tratamientos',    name:'Ampolleta Estructural',            price:300},
+  {id:'t2', cat:'Tratamientos',    name:'Hidratación Mascarilla',           price:350},
+  {id:'t3', cat:'Tratamientos',    name:'Alfaparf',                         price:1000},
+  {id:'t4', cat:'Tratamientos',    name:'Células Madre',                    price:1500},
+  {id:'t5', cat:'Tratamientos',    name:'Motika — Corto',                   price:400},
+  {id:'t6', cat:'Tratamientos',    name:'Motika — Mediano',                 price:800},
+  {id:'t7', cat:'Tratamientos',    name:'Motika — Largo',                   price:1200},
+  {id:'t8', cat:'Tratamientos',    name:'Smooth Keratina — Corto',          price:1500},
+  {id:'t9', cat:'Tratamientos',    name:'Smooth Keratina — Mediano',        price:2000},
+  {id:'t10',cat:'Tratamientos',    name:'Smooth Keratina — Largo',          price:2500},
+  {id:'t11',cat:'Tratamientos',    name:'Smooth Keratina — Extra Largo',    price:3500},
+  {id:'cl1',cat:'Color',           name:'Tinte Completo — Corto',           price:800},
+  {id:'cl2',cat:'Color',           name:'Tinte Completo — Mediano',         price:1100},
+  {id:'cl3',cat:'Color',           name:'Tinte Completo — Largo',           price:1400},
+  {id:'cl4',cat:'Color',           name:'Tinte Completo — Extra Largo',     price:1800},
+  {id:'cl5',cat:'Color',           name:'Retoque Tinte',                    price:650},
+  {id:'cl6',cat:'Color',           name:'Color Refresh',                    price:550},
+  {id:'dc1',cat:'Diseños de Color',name:'Luces/Babylight — Corto',          price:1200},
+  {id:'dc2',cat:'Diseños de Color',name:'Luces/Babylight — Mediano',        price:2200},
+  {id:'dc3',cat:'Diseños de Color',name:'Luces/Babylight — Largo',          price:3400},
+  {id:'dc4',cat:'Diseños de Color',name:'Luces/Babylight — XL',             price:4500},
+  {id:'dc5',cat:'Diseños de Color',name:'Shatush — Mediano',                price:2400},
+  {id:'dc6',cat:'Diseños de Color',name:'Shatush — Largo',                  price:3200},
+  {id:'dc7',cat:'Diseños de Color',name:'Shatush — Extra Largo',            price:4000},
+  {id:'dc8',cat:'Diseños de Color',name:'Decoraciones Globales — Corto',    price:1800},
+  {id:'dc9',cat:'Diseños de Color',name:'Decoraciones Globales — Mediano',  price:2500},
+  {id:'dc10',cat:'Diseños de Color',name:'Decoraciones Globales — Largo',   price:2950},
+  {id:'dc11',cat:'Diseños de Color',name:'Decoraciones Globales — XL',      price:3700},
+  {id:'dc12',cat:'Diseños de Color',name:'Balayage — Corto',                price:1700},
+  {id:'dc13',cat:'Diseños de Color',name:'Balayage — Mediano',              price:2300},
+  {id:'dc14',cat:'Diseños de Color',name:'Balayage — Largo',                price:2900},
+  {id:'dc15',cat:'Diseños de Color',name:'Balayage — Extra Largo',          price:3700},
+  {id:'a1', cat:'Acrílico',        name:'Mantenimiento Acrílico + Gel',     price:400},
+  {id:'a2', cat:'Acrílico',        name:'Uñas de Tip + Gel 1 Tono',         price:520},
+  {id:'a3', cat:'Acrílico',        name:'Uñas Esculturales + Gel 1 Tono',   price:630},
+  {id:'a4', cat:'Acrílico',        name:'Retiro Acrílico',                  price:180},
+  {id:'a5', cat:'Acrílico',        name:'Baño de Acrílico',                 price:350},
+  {id:'a6', cat:'Acrílico',        name:'Parche Acrílico (x uña)',          price:50},
+  {id:'a7', cat:'Acrílico',        name:'Reposición de Uña',                price:60},
+  {id:'tg1',cat:'Tech Gel',        name:'Tech Gel Nuevas + Gel',            price:450},
+  {id:'tg2',cat:'Tech Gel',        name:'Tech Gel Mantenimiento',           price:380},
+  {id:'tg3',cat:'Tech Gel',        name:'Retiro Tech Gel',                  price:180},
+  {id:'du1',cat:'Diseños Uñas',    name:'Efecto en Polvo (x uña)',          price:12},
+  {id:'du2',cat:'Diseños Uñas',    name:'Diseño Sencillo (x uña)',          price:12},
+  {id:'du3',cat:'Diseños Uñas',    name:'Diseño Medio (x uña)',             price:17},
+  {id:'du4',cat:'Diseños Uñas',    name:'Diseño Elaborado (x uña)',         price:30},
+  {id:'du5',cat:'Diseños Uñas',    name:'Diseño Mano Alzada (x uña)',       price:60},
+  {id:'mn1',cat:'Manicure',        name:'Esmaltado Clásico',                price:140},
+  {id:'mn2',cat:'Manicure',        name:'Esmaltado con Vinylux',            price:170},
+  {id:'mn3',cat:'Manicure',        name:'Gel Clásico',                      price:210},
+  {id:'mn4',cat:'Manicure',        name:'Nivelación Rubber Beige/Pink',     price:350},
+  {id:'mn5',cat:'Manicure',        name:'Retiro de Gel',                    price:100},
+  {id:'mn6',cat:'Manicure',        name:'Manicura Rusa',                    price:350},
+  {id:'mn7',cat:'Manicure',        name:'Manicura Rusa con Gel',            price:450},
+  {id:'mn8',cat:'Manicure',        name:'Manicura Rusa SPA',                price:460},
+  {id:'mn9',cat:'Manicure',        name:'Manicura Rusa SPA con Gel',        price:550},
+  {id:'pd1',cat:'Pedicure',        name:'Pedicure Básico',                  price:460},
+  {id:'pd2',cat:'Pedicure',        name:'Pedicure Básico con Gel',          price:580},
+  {id:'pd3',cat:'Pedicure',        name:'Pedicure SPA',                     price:600},
+  {id:'pd4',cat:'Pedicure',        name:'Pedicure SPA con Gel',             price:700},
+];
+const CATS = [...new Set(CAT.map(s=>s.cat))];
+
+// PAQUETES
+const PAQUETES = [
+  {id:'pk1',name:'Paquete Brillo Total', items:['Tinte Completo — Mediano','Ampolleta Estructural','Secado Estilizado'], price:1500, desc:'Tinte + tratamiento + secado'},
+  {id:'pk2',name:'Paquete Uñas Completo',items:['Manicura Rusa con Gel','Pedicure Básico con Gel'],price:950,desc:'Manicure + pedicure'},
+  {id:'pk3',name:'Paquete Color + Corte', items:['Retoque Tinte','Corte de Dama'],price:1100,desc:'Retoque + corte'},
+  {id:'pk4',name:'Paquete Novia',         items:['Peinado Elaborado','Maquillaje Social + Waves','Cejas HD (Laminado + Henna)'],price:3200,desc:'Peinado + maquillaje + cejas'},
+];
+
+// STATE
+let CU=null, CP='', SBO=false;
+let cart=[], selEst=null, selCli=null;
+let agDate=new Date();
+let _cSvcs=[];
+
+// INIT
+window.addEventListener('DOMContentLoaded',()=>{
+  if(location.search.includes('booking')||location.hash.includes('booking')){showBooking();return;}
+  const s=sessionStorage.getItem('bl_u');
+  if(s){CU=JSON.parse(s);showApp();}
+});
+
+// =============================================================
+// AUTH
+// =============================================================
+function doLogin(){
+  const e=G('li-e').value.trim().toLowerCase(), p=G('li-p').value;
+  const u=STAFF.find(s=>s.email===e&&s.pw===p);
+  if(!u){G('le').textContent='Credenciales incorrectas';return;}
+  CU=u; sessionStorage.setItem('bl_u',JSON.stringify(u));
+  G('le').textContent=''; showApp();
+}
+G('li-p').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function doLogout(){CU=null;sessionStorage.removeItem('bl_u');G('app').style.display='none';G('ls').style.display='flex';}
+
+function showApp(){
+  G('ls').style.display='none'; G('app').style.display='flex';
+  buildSB(); navigate('dashboard');
+}
+
+// =============================================================
+// SIDEBAR
+// =============================================================
+function buildSB(){
+  const isA=CU.role==='admin';
+  const nav=[
+    {p:'dashboard',i:'◈',l:'Dashboard'},
+    {p:'agenda',   i:'◫',l:'Agenda'},
+    {p:'clientes', i:'◎',l:'Clientes'},
+    {p:'caja',     i:'◉',l:'Caja · Cobro'},
+    {p:'comisiones',i:'◐',l:'Comisiones'},
+    ...(isA?[
+      {p:'catalogo',  i:'◳',l:'Catálogo'},
+      {p:'inventario',i:'◱',l:'Inventario'},
+      {p:'finanzas',  i:'◑',l:'Finanzas'},
+      {p:'nomina',    i:'◈',l:'Nómina'},
+      {p:'reportes',  i:'◭',l:'Reportes'},
+    ]:[]),
+  ];
+  G('sbnav').innerHTML=nav.map(n=>`<div class="ni" data-p="${n.p}" onclick="navigate('${n.p}')"><span class="ni-ic">${n.i}</span><span>${n.l}</span></div>`).join('');
+  G('sbav').textContent=CU.name[0]; G('sbav').style.background=CU.color;
+  G('sbun').textContent=CU.name; G('sbur').textContent=ROLES[CU.role]||CU.role;
+}
+
+function navigate(p){
+  CP=p;
+  document.querySelectorAll('.ni').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
+  const T={dashboard:'Dashboard',agenda:'Agenda',clientes:'Clientes',caja:'Caja · Cobro',
+    comisiones:'Comisiones',catalogo:'Catálogo',inventario:'Inventario',finanzas:'Finanzas',
+    nomina:'Nómina Semanal',reportes:'Reportes'};
+  G('tbt').textContent=T[p]||p; G('tba').innerHTML='';
+  G('ct').innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
+  if(window.innerWidth<=768){G('sb').classList.remove('open');SBO=false;}
+  ({dashboard:pgDash,agenda:pgAgenda,clientes:pgCli,caja:pgCaja,comisiones:pgComm,
+    catalogo:pgCat,inventario:pgInv,finanzas:pgFin,nomina:pgNomina,reportes:pgRep})[p]?.();
+}
+function toggleSB(){SBO=!SBO;G('sb').classList.toggle('open',SBO);}
+
+// =============================================================
+// HELPERS
+// =============================================================
+const G=id=>document.getElementById(id);
+const $=q=>document.querySelector(q);
+const mxn=n=>`$${Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+const isoD=d=>new Date(d).toISOString().split('T')[0];
+const today=()=>isoD(new Date());
+function toast(msg,t=''){
+  const el=G('toast'); el.textContent=msg;
+  el.className='show'+(t?' '+t:'');
+  setTimeout(()=>el.className='',2600);
+}
+function openM(h){G('mc').innerHTML=h;G('mo').classList.add('open');}
+function closeM(){G('mo').classList.remove('open');}
+G('mo').addEventListener('click',e=>{if(e.target===G('mo'))closeM();});
+
+async function dbQ(t,f={}){
+  try{
+    let q=sb.from(t).select('*');
+    for(const[k,v]of Object.entries(f))q=q.eq(k,v);
+    const{data,error}=await q.order('created_at',{ascending:false});
+    if(error)throw error; return data||[];
+  }catch{return[];}
+}
+async function dbI(t,d){
+  try{
+    const{data:r,error}=await sb.from(t).insert(d).select().single();
+    if(error)throw error; return r;
+  }catch(e){toast('Error al guardar','err');return null;}
+}
+async function dbU(t,id,d){
+  try{const{error}=await sb.from(t).update(d).eq('id',id);if(error)throw error;return true;}
+  catch{toast('Error','err');return false;}
+}
+async function dbD(t,id){
+  try{await sb.from(t).delete().eq('id',id);return true;}catch{return false;}
+}
+
+// =============================================================
+// DASHBOARD
+// =============================================================
+async function pgDash(){
+  const c=G('ct'), isA=CU.role==='admin';
+  if(!isA){
+    const citas=await dbQ('bl_citas',{estilista_id:CU.id,fecha:today()});
+    c.innerHTML=`
+      <div style="margin-bottom:16px">
+        <div style="font-family:var(--fd);font-size:24px;font-weight:300">Hola, <span style="color:var(--gold)">${CU.name}</span> ✦</div>
+        <div style="font-size:11px;color:var(--g3);margin-top:3px">${new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})}</div>
+      </div>
+      <div class="kg" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="kp"><div class="kl">Citas Hoy</div><div class="kv">${citas.length}</div></div>
+        <div class="kp"><div class="kl">Completadas</div><div class="kv" style="color:var(--green)">${citas.filter(c=>c.estado==='completada').length}</div></div>
+        <div class="kp"><div class="kl">Pendientes</div><div class="kv">${citas.filter(c=>c.estado==='pendiente'||!c.estado).length}</div></div>
+      </div>
+      <div class="card">
+        <div class="ct2">Mis Citas de Hoy</div>
+        ${citas.length?citas.sort((a,b)=>(a.hora_inicio||'').localeCompare(b.hora_inicio||'')).map(ci=>`
+          <div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="min-width:44px;text-align:center;font-size:12px;color:var(--gold);font-weight:600">${ci.hora_inicio||'—'}</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:500">${ci.cliente_nombre||'Sin nombre'}</div>
+              <div style="font-size:10px;color:var(--g3)">${(ci.servicios||[]).slice(0,2).join(', ')||'—'}</div>
+            </div>
+            <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}">${ci.estado||'pendiente'}</span>
+            ${ci.estado!=='completada'?`<button class="btn bg bsm" onclick="compCita('${ci.id}','dash')">✓</button>`:''}
+          </div>`).join('')
+        :'<div class="empty"><div class="ei">📅</div><div class="et">Sin citas hoy</div></div>'}
+      </div>`;
+    return;
+  }
+  const [cH,vT,clT,ciA]=await Promise.all([dbQ('bl_citas',{fecha:today()}),dbQ('bl_ventas'),dbQ('bl_clientes'),dbQ('bl_citas')]);
+  const mes=new Date().toISOString().slice(0,7);
+  const vM=vT.filter(v=>(v.created_at||'').startsWith(mes));
+  const totM=vM.reduce((s,v)=>s+(v.total||0),0);
+  const sem=getSemana(new Date());
+  const cSem=ciA.filter(ci=>{const d=new Date(ci.fecha);return d>=sem.mon&&d<=sem.sun;});
+  const topEst=STYLISTS.map(s=>({...s,tot:vM.filter(v=>v.estilista_id===s.id).reduce((a,v)=>a+(v.total||0),0)})).sort((a,b)=>b.tot-a.tot);
+
+  c.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--fd);font-size:24px;font-weight:300">Beauty Lab <span style="color:var(--gold)">·</span> Dashboard</div>
+      <div style="font-size:11px;color:var(--g3);margin-top:3px">${new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Ventas del Mes</div><div class="kv">${mxn(totM)}</div><div class="ks">${vM.length} transacciones</div></div>
+      <div class="kp"><div class="kl">Citas Hoy</div><div class="kv">${cH.length}</div><div class="ks">${cH.filter(c=>c.estado==='completada').length} completadas</div></div>
+      <div class="kp"><div class="kl">Citas Esta Semana</div><div class="kv">${cSem.length}</div></div>
+      <div class="kp"><div class="kl">Clientas</div><div class="kv">${clT.length}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card">
+        <div class="ct2">Citas de Hoy</div>
+        ${cH.length?cH.slice(0,6).map(ci=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+            <div style="width:7px;height:7px;border-radius:50%;background:${STAFF.find(s=>s.id===ci.estilista_id)?.color||'#555'};flex-shrink:0"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ci.cliente_nombre||'Sin nombre'}</div>
+              <div style="font-size:10px;color:var(--g3)">${ci.hora_inicio||''}${ci.hora_inicio?' · ':''}${STAFF.find(s=>s.id===ci.estilista_id)?.name||''}</div>
+            </div>
+            <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}" style="font-size:9px">${ci.estado||'pendiente'}</span>
+          </div>`).join('')
+        :'<div class="empty" style="padding:14px"><div class="et">Sin citas hoy</div></div>'}
+      </div>
+      <div class="card">
+        <div class="ct2">Equipo — Ventas del Mes</div>
+        ${topEst.map(s=>`
+          <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="width:28px;height:28px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#060606">${s.name[0]}</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500">${s.name}</div>
+              <div style="font-size:10px;color:var(--g3)">${vM.filter(v=>v.estilista_id===s.id).length} servicios</div>
+            </div>
+            <div style="font-size:12px;color:var(--gold);font-weight:600">${mxn(s.tot)}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function getSemana(d){
+  const dt=new Date(d),day=dt.getDay(),diff=dt.getDate()-day+(day===0?-6:1);
+  const mon=new Date(dt.setDate(diff));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return{mon,sun};
+}
+
+// =============================================================
+// AGENDA
+// =============================================================
+async function pgAgenda(){
+  G('tba').innerHTML=`
+    <button class="btn bp bsm" onclick="openNuevaCita()">+ Nueva Cita</button>
+    <button class="btn bg bsm" onclick="cpyBkLink()">🔗 Booking</button>`;
+  const isA=CU.role==='admin';
+  const cols=isA?STYLISTS:[CU];
+  const citas=await dbQ('bl_citas');
+  const dC=citas.filter(ci=>ci.fecha===isoD(agDate));
+  const ld=agDate.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  G('ct').innerHTML=`
+    <div class="ag-nav">
+      <button class="btn bg bsm" onclick="agNav(-1)">◀</button>
+      <div class="ag-dt">${ld}</div>
+      <button class="btn bg bsm" onclick="agDate=new Date();pgAgenda()">Hoy</button>
+      <button class="btn bg bsm" onclick="agNav(1)">▶</button>
+    </div>
+    <div class="ag-grid" style="grid-template-columns:repeat(${cols.length},1fr)">
+      ${cols.map(s=>{
+        const sc=dC.filter(ci=>ci.estilista_id===s.id).sort((a,b)=>(a.hora_inicio||'').localeCompare(b.hora_inicio||''));
+        return`<div class="ag-col">
+          <div class="ag-hdr" style="color:${s.color};border-color:${s.color}">
+            <span style="font-size:18px;font-weight:700">${s.name[0]}</span>
+            <span style="margin-left:5px">${s.name}</span>
+            <div style="font-size:9px;opacity:.5;margin-top:1px">${sc.length} cita(s)</div>
+          </div>
+          <div class="ag-slots">
+            ${sc.map(ci=>`
+              <div class="ag-slot" style="background:${s.color}15;border-color:${s.color}" onclick="verCita('${ci.id}')">
+                <div class="sl-t">${ci.hora_inicio||'?'} – ${ci.hora_fin||'?'}</div>
+                <div class="sl-n">${ci.cliente_nombre||'Sin nombre'}</div>
+                <div class="sl-s">${(ci.servicios||[]).slice(0,2).join(', ')||'—'}</div>
+                <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}" style="margin-top:3px;font-size:9px">${ci.estado||'pendiente'}</span>
+              </div>`).join('')}
+            ${isA||CU.id===s.id?`<div class="ag-add" onclick="openNuevaCita('${s.id}')">+ agregar cita</div>`:''}
+          </div>
+        </div>`;}).join('')}
+    </div>`;
+}
+function agNav(d){agDate.setDate(agDate.getDate()+d);pgAgenda();}
+function cpyBkLink(){
+  const u=location.origin+location.pathname+'?booking';
+  navigator.clipboard.writeText(u).then(()=>toast('Link copiado ✓','ok'));
+}
+
+async function openNuevaCita(preEst=''){
+  _cSvcs=[];
+  const clis=await dbQ('bl_clientes');
+  openM(`
+    <div class="mt">✦ Nueva Cita</div>
+    <div class="fg"><label class="fl">Fecha</label><input class="fc" id="cf" type="date" value="${isoD(agDate)}"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Hora inicio</label><input class="fc" id="chi" type="time" value="10:00"></div>
+      <div class="fg"><label class="fl">Hora fin</label><input class="fc" id="chf" type="time" value="11:00"></div>
+    </div>
+    <div class="fg"><label class="fl">Estilista</label>
+      <select class="fc" id="ce">
+        ${STYLISTS.map(s=>`<option value="${s.id}" ${s.id===preEst?'selected':''}>${s.name}</option>`).join('')}
+      </select></div>
+    <div class="fg"><label class="fl">Clienta (base de datos)</label>
+      <select class="fc" id="ccl">
+        <option value="">— Nueva clienta —</option>
+        ${clis.map(cl=>`<option value="${cl.id}" data-n="${cl.nombre}">${cl.nombre}${cl.telefono?' · '+cl.telefono:''}</option>`).join('')}
+      </select></div>
+    <div class="fg"><label class="fl">Nombre si no está en lista</label><input class="fc" id="cnc" placeholder="Nombre completo"></div>
+    <div class="fg"><label class="fl">Buscar servicio</label>
+      <input class="fc" id="csq" placeholder="Ej: corte, tinte..." oninput="filtCS(this.value)" style="margin-bottom:7px">
+      <div class="chips" id="csr"></div>
+      <div class="chips" id="css" style="margin-top:5px"></div>
+    </div>
+    <div class="fg"><label class="fl">Notas</label><input class="fc" id="cn" placeholder="Alergias, observaciones..."></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveCita()">Guardar Cita</button>
+    </div>`);
+  filtCS('');
+}
+
+function filtCS(q){
+  const r=G('csr');if(!r)return;
+  const list=q?CAT.filter(s=>s.name.toLowerCase().includes(q.toLowerCase())).slice(0,12):CAT.slice(0,12);
+  r.innerHTML=list.map(s=>`<div class="chip ${_cSvcs.includes(s.name)?'sel':''}" onclick="togCS('${s.name}',this)">${s.name}</div>`).join('');
+}
+function togCS(name,el){
+  el.classList.toggle('sel');
+  _cSvcs.includes(name)?(_cSvcs=_cSvcs.filter(s=>s!==name)):_cSvcs.push(name);
+  const ss=G('css');
+  if(ss)ss.innerHTML=_cSvcs.map(s=>`<span class="chip sel">${s}</span>`).join('');
+}
+
+async function saveCita(){
+  const fecha=G('cf')?.value,hi=G('chi')?.value,hf=G('chf')?.value,estId=G('ce')?.value;
+  const cliId=G('ccl')?.value,cliNom=G('ccl')?.selectedOptions[0]?.dataset?.n||'';
+  const nuevo=G('cnc')?.value?.trim(),notas=G('cn')?.value;
+  if(!fecha||!estId){toast('Fecha y estilista requeridos','err');return;}
+  let cid=cliId,cnm=cliNom||nuevo||'Sin nombre';
+  if(!cliId&&nuevo){
+    const nc=await dbI('bl_clientes',{nombre:nuevo,created_at:new Date().toISOString()});
+    if(nc){cid=nc.id;cnm=nuevo;}
+  }
+  const r=await dbI('bl_citas',{fecha,hora_inicio:hi,hora_fin:hf,estilista_id:estId,
+    cliente_id:cid||null,cliente_nombre:cnm,servicios:_cSvcs,notas,estado:'pendiente',
+    created_at:new Date().toISOString()});
+  _cSvcs=[];
+  if(r){toast('Cita guardada ✓','ok');closeM();pgAgenda();}
+}
+
+async function verCita(id){
+  const citas=await dbQ('bl_citas');
+  const ci=citas.find(c=>c.id===id);if(!ci)return;
+  const est=STAFF.find(s=>s.id===ci.estilista_id);
+  openM(`
+    <div class="mt">${ci.cliente_nombre||'Sin nombre'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+      <div><div style="font-size:9px;color:var(--g3)">Fecha</div><div style="margin-top:2px;font-size:13px">${ci.fecha}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Horario</div><div style="margin-top:2px;font-size:13px">${ci.hora_inicio||'—'} – ${ci.hora_fin||'—'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Estilista</div><div style="margin-top:2px;font-size:13px;color:${est?.color||'#fff'}">${est?.name||'—'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Estado</div><div style="margin-top:2px"><span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}">${ci.estado||'pendiente'}</span></div></div>
+    </div>
+    ${(ci.servicios||[]).length?`<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--g3);margin-bottom:6px">Servicios</div><div class="chips">${(ci.servicios||[]).map(s=>`<span class="chip">${s}</span>`).join('')}</div></div>`:''}
+    ${ci.notas?`<div style="font-size:12px;color:var(--g2);padding:9px;background:var(--bg3);border-radius:var(--r);margin-bottom:12px">${ci.notas}</div>`:''}
+    <div class="ma">
+      <button class="btn bd bsm" onclick="cancelarCita('${id}')">Cancelar cita</button>
+      ${ci.estado!=='completada'?`<button class="btn bg bsm" onclick="compCita('${id}','agenda')">✓ Completar</button>`:''}
+      <button class="btn bp bsm" onclick="irACaja('${ci.estilista_id}','${ci.cliente_id||''}','${(ci.cliente_nombre||'').replace(/'/g,"\\'")}')">Cobrar</button>
+    </div>`);
+}
+
+async function compCita(id,src){
+  await dbU('bl_citas',id,{estado:'completada'});
+  toast('Completada ✓','ok');closeM();
+  src==='agenda'?pgAgenda():pgDash();
+}
+async function cancelarCita(id){
+  await dbU('bl_citas',id,{estado:'cancelada'});
+  toast('Cita cancelada','');closeM();pgAgenda();
+}
+function irACaja(estId,cliId,cliNom){
+  selEst=STAFF.find(s=>s.id===estId)||null;
+  selCli=cliId?{id:cliId,nombre:cliNom}:null;
+  cart=[];closeM();navigate('caja');
+}
+
+// =============================================================
+// CLIENTES
+// =============================================================
+async function pgCli(){
+  G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewCli()">+ Nueva Clienta</button>`;
+  const clis=await dbQ('bl_clientes');
+  window._ac=clis;
+  G('ct').innerHTML=`
+    <div style="margin-bottom:12px"><div class="sbox"><span style="color:var(--g3)">🔍</span><input id="cq" placeholder="Buscar por nombre o teléfono..." oninput="filtCli(this.value)"></div></div>
+    <div class="card"><div class="tw" id="ctbl">${renderCliT(clis)}</div></div>`;
+}
+function renderCliT(l){
+  if(!l.length)return'<div class="empty"><div class="ei">👥</div><div class="et">Sin clientas registradas</div></div>';
+  return`<table>
+    <thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Cumpleaños</th><th>Registro</th><th></th></tr></thead>
+    <tbody>${l.map(cl=>`<tr>
+      <td><strong>${cl.nombre}</strong></td>
+      <td>${cl.telefono||'—'}</td>
+      <td style="font-size:11px">${cl.email||'—'}</td>
+      <td style="font-size:11px">${cl.cumpleanos||'—'}</td>
+      <td style="font-size:10px;color:var(--g3)">${cl.created_at?new Date(cl.created_at).toLocaleDateString('es-MX'):'—'}</td>
+      <td><button class="btn bg bsm" onclick="verCli('${cl.id}')">Ver</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+function filtCli(q){
+  const f=(window._ac||[]).filter(c=>c.nombre?.toLowerCase().includes(q.toLowerCase())||c.telefono?.includes(q));
+  G('ctbl').innerHTML=renderCliT(f);
+}
+function openNewCli(){
+  openM(`
+    <div class="mt">✦ Nueva Clienta</div>
+    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="nc-n" placeholder="Nombre completo"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Teléfono</label><input class="fc" id="nc-t" type="tel" placeholder="81 0000 0000"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fc" id="nc-e" type="email" placeholder="correo@..."></div>
+    </div>
+    <div class="fg"><label class="fl">Cumpleaños</label><input class="fc" id="nc-b" type="date"></div>
+    <div class="fg"><label class="fl">Notas / Alergias</label><textarea class="fc" id="nc-no" rows="2" placeholder="Alergias, preferencias..."></textarea></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveCli()">Guardar</button>
+    </div>`);
+}
+async function saveCli(){
+  const n=G('nc-n')?.value?.trim();
+  if(!n){toast('Nombre requerido','err');return;}
+  const r=await dbI('bl_clientes',{nombre:n,telefono:G('nc-t')?.value,email:G('nc-e')?.value,
+    cumpleanos:G('nc-b')?.value,notas:G('nc-no')?.value,created_at:new Date().toISOString()});
+  if(r){toast('Clienta guardada ✓','ok');closeM();pgCli();}
+}
+async function verCli(id){
+  const[clis,citas,ventas]=await Promise.all([dbQ('bl_clientes'),dbQ('bl_citas',{cliente_id:id}),dbQ('bl_ventas',{cliente_id:id})]);
+  const cl=clis.find(c=>c.id===id);if(!cl)return;
+  const tot=ventas.reduce((s,v)=>s+(v.total||0),0);
+  openM(`
+    <div class="mt">${cl.nombre}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+      <div><div style="font-size:9px;color:var(--g3)">Teléfono</div><div style="margin-top:2px">${cl.telefono||'—'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Email</div><div style="margin-top:2px;font-size:11px">${cl.email||'—'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Visitas</div><div style="font-family:var(--fd);font-size:22px;color:var(--gold)">${citas.length}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Gasto Total</div><div style="font-family:var(--fd);font-size:22px;color:var(--gold)">${mxn(tot)}</div></div>
+    </div>
+    ${cl.notas?`<div style="font-size:12px;padding:9px;background:var(--bg3);border-radius:var(--r);margin-bottom:12px;color:var(--g2)">${cl.notas}</div>`:''}
+    <div style="font-size:9px;color:var(--g3);margin-bottom:7px">Últimas Visitas</div>
+    ${citas.slice(0,4).map(ci=>`
+      <div style="padding:6px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px">${ci.fecha}${ci.hora_inicio?' · '+ci.hora_inicio:''} · <span style="color:${STAFF.find(s=>s.id===ci.estilista_id)?.color||'#fff'}">${STAFF.find(s=>s.id===ci.estilista_id)?.name||''}</span></div>
+        <div style="font-size:10px;color:var(--g3)">${(ci.servicios||[]).join(', ')||'—'}</div>
+      </div>`).join('')||'<div style="color:var(--g3);font-size:12px">Sin visitas registradas</div>'}
+    <div class="ma"><button class="btn bg bsm" onclick="closeM()">Cerrar</button></div>`);
+}
+
+// =============================================================
+// CAJA / POS
+// =============================================================
+async function pgCaja(){
+  if(!selEst&&CU.role!=='admin')selEst=CU;
+  const clis=await dbQ('bl_clientes');
+  G('ct').innerHTML=`
+    <div class="pos-w">
+      <div>
+        <div class="fr" style="margin-bottom:10px">
+          <div class="fg" style="margin:0"><label class="fl">Estilista</label>
+            <select class="fc" id="pe" onchange="setEst(this.value)">
+              ${CU.role==='admin'
+                ?STYLISTS.map(s=>`<option value="${s.id}" ${selEst?.id===s.id?'selected':''}>${s.name}</option>`).join('')
+                :`<option value="${CU.id}">${CU.name}</option>`}
+            </select></div>
+          <div class="fg" style="margin:0"><label class="fl">Clienta</label>
+            <select class="fc" id="pcl" onchange="setCli(this.value,this.selectedOptions[0]?.text)">
+              <option value="">— Sin clienta —</option>
+              ${clis.map(cl=>`<option value="${cl.id}" ${selCli?.id===cl.id?'selected':''}>${cl.nombre}</option>`).join('')}
+            </select></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="posTab(this,'svcs')">Servicios</div>
+          <div class="tab" onclick="posTab(this,'paquetes')">Paquetes</div>
+        </div>
+        <div id="pos-svcs">
+          <div class="sbox" style="margin-bottom:9px">
+            <span style="color:var(--g3)">🔍</span>
+            <input placeholder="Buscar servicio..." oninput="filtP(this.value)">
+          </div>
+          <div id="pcats">${renderPCats(CATS)}</div>
+        </div>
+        <div id="pos-paq" style="display:none">
+          ${PAQUETES.map(pk=>`
+            <div class="pos-it" onclick="addPaq('${pk.id}')">
+              <div style="flex:1">
+                <div class="pi-n">${pk.name}</div>
+                <div style="font-size:10px;color:var(--g3)">${pk.desc}</div>
+              </div>
+              <span class="pi-p">${mxn(pk.price)}</span>
+              <span class="pi-a">+</span>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="card" style="position:sticky;top:0">
+          <div class="ct2">Resumen</div>
+          <div id="cart-items"><div class="empty" style="padding:14px"><div class="et">Sin servicios</div></div></div>
+          <div class="ct-row"><span class="ct-l">Subtotal</span><span id="cart-sub">$0</span></div>
+          <div class="fg">
+            <label class="fl">Descuento ($)</label>
+            <input class="fc" id="pdesc" type="number" min="0" value="0" oninput="renderCart()">
+          </div>
+          <div class="ct-row"><span class="ct-l" style="font-weight:600">Total</span><span class="ct-v" id="cart-tot">$0</span></div>
+          <div class="fg" style="margin-bottom:10px">
+            <label class="fl">Método de pago</label>
+            <select class="fc" id="ppago">
+              <option value="efectivo">💵 Efectivo</option>
+              <option value="transferencia">📲 Transferencia</option>
+              <option value="terminal">💳 Terminal</option>
+            </select>
+          </div>
+          <button class="btn bp" style="width:100%" onclick="cobrar()">Cobrar · Generar Ticket</button>
+          <button class="btn bg" style="width:100%;margin-top:6px" onclick="clearCart()">Limpiar</button>
+        </div>
+      </div>
+    </div>`;
+  renderCart();
+}
+
+function renderPCats(cats){
+  return cats.map(cat=>`
+    <div class="pos-cl">${cat}</div>
+    ${CAT.filter(s=>s.cat===cat).map(s=>`
+      <div class="pos-it" onclick="addCart('${s.id}')">
+        <span class="pi-n">${s.name}</span>
+        <span class="pi-p">${s.variable?'Variable':mxn(s.price)}</span>
+        <span class="pi-a">+</span>
+      </div>`).join('')}`).join('');
+}
+
+function posTab(el,tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  G('pos-svcs').style.display=tab==='svcs'?'block':'none';
+  G('pos-paq').style.display=tab==='paquetes'?'block':'none';
+}
+function filtP(q){
+  const pc=G('pcats');if(!pc)return;
+  if(!q){pc.innerHTML=renderPCats(CATS);return;}
+  const r=CAT.filter(s=>s.name.toLowerCase().includes(q.toLowerCase()));
+  pc.innerHTML=r.map(s=>`<div class="pos-it" onclick="addCart('${s.id}')"><span class="pi-n">${s.name}</span><span class="pi-p">${mxn(s.price)}</span><span class="pi-a">+</span></div>`).join('');
+}
+function setEst(id){selEst=STAFF.find(s=>s.id===id)||null;}
+function setCli(id,name){selCli=id?{id,nombre:name}:null;}
+function addCart(sid){
+  const s=CAT.find(x=>x.id===sid);if(!s)return;
+  if(s.variable){
+    openM(`<div class="mt">Precio para ${s.name}</div>
+      <div class="fg"><label class="fl">Precio ($)</label><input class="fc" id="vp" type="number" min="0" placeholder="0"></div>
+      <div class="ma">
+        <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+        <button class="btn bp bsm" onclick="addVarCart('${sid}')">Agregar</button>
+      </div>`);
+    return;
+  }
+  const ex=cart.find(i=>i.id===sid);
+  if(ex)ex.qty++;
+  else cart.push({id:sid,name:s.name,price:s.price,qty:1});
+  renderCart();
+}
+function addVarCart(sid){
+  const p=parseFloat(G('vp')?.value)||0;
+  const s=CAT.find(x=>x.id===sid);if(!s)return;
+  cart.push({id:sid+Date.now(),name:s.name,price:p,qty:1});
+  closeM();renderCart();
+}
+function addPaq(pid){
+  const pk=PAQUETES.find(p=>p.id===pid);if(!pk)return;
+  cart.push({id:pid+Date.now(),name:pk.name,price:pk.price,qty:1,esPaq:true});
+  renderCart();toast(`Paquete "${pk.name}" agregado`,'ok');
+}
+function qtyCart(id,d){
+  const i=cart.find(x=>x.id===id);if(!i)return;
+  i.qty+=d;if(i.qty<=0)cart=cart.filter(x=>x.id!==id);
+  renderCart();
+}
+function renderCart(){
+  const sub=cart.reduce((s,i)=>s+(i.price*i.qty),0);
+  const desc=parseFloat(G('pdesc')?.value)||0;
+  const tot=Math.max(0,sub-desc);
+  const ci=G('cart-items'),cs=G('cart-sub'),ct=G('cart-tot');
+  if(ci)ci.innerHTML=cart.length?cart.map(i=>`
+    <div class="ci">
+      <div class="ci-n">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}</div>
+      <div class="ci-qty">
+        <button class="qb" onclick="qtyCart('${i.id}',-1)">−</button>
+        <span style="font-size:12px;min-width:14px;text-align:center">${i.qty}</span>
+        <button class="qb" onclick="qtyCart('${i.id}',1)">+</button>
+      </div>
+      <div class="ci-p">${mxn(i.price*i.qty)}</div>
+    </div>`).join('')
+  :'<div class="empty" style="padding:12px"><div class="et">Sin servicios</div></div>';
+  if(cs)cs.textContent=mxn(sub);
+  if(ct)ct.textContent=mxn(tot);
+}
+function clearCart(){cart=[];renderCart();}
+
+async function cobrar(){
+  if(!cart.length){toast('Agrega servicios al carrito','err');return;}
+  if(!selEst){toast('Selecciona una estilista','err');return;}
+  const desc=parseFloat(G('pdesc')?.value)||0;
+  const sub=cart.reduce((s,i)=>s+(i.price*i.qty),0);
+  const tot=Math.max(0,sub-desc);
+  const pago=G('ppago')?.value||'efectivo';
+  const comm=tot*selEst.comm;
+  const venta=await dbI('bl_ventas',{
+    estilista_id:selEst.id,estilista_nombre:selEst.name,
+    cliente_id:selCli?.id||null,cliente_nombre:selCli?.nombre||'Sin nombre',
+    items:cart,subtotal:sub,descuento:desc,total:tot,metodo_pago:pago,
+    comision:comm,created_at:new Date().toISOString()
+  });
+  if(venta){showTicket(venta);cart=[];selCli=null;}
+}
+
+function showTicket(v){
+  const d=new Date().toLocaleString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const pMap={'efectivo':'Efectivo','transferencia':'Transferencia','terminal':'Terminal'};
+  G('tkcnt').innerHTML=`
+    <div class="th">
+      <div class="th-l">BEAUTY LAB</div>
+      <div class="th-s">SALON DE BELLEZA · MTY</div>
+    </div>
+    <div style="margin-bottom:8px;font-size:9px;color:#888">
+      <div>${d}</div>
+      <div>Atendió: ${v.estilista_nombre}</div>
+      <div>Cliente: ${v.cliente_nombre}</div>
+    </div>
+    <div style="border-top:1px dashed #ccc;padding-top:7px">
+      ${(v.items||[]).map(i=>`<div class="tr2"><span>${i.name}${i.qty>1?' x'+i.qty:''}</span><span>${mxn(i.price*i.qty)}</span></div>`).join('')}
+    </div>
+    ${v.descuento?`<div class="tr2" style="color:#888"><span>Descuento</span><span>-${mxn(v.descuento)}</span></div>`:''}
+    <div class="tr2 tot"><span>TOTAL</span><span>${mxn(v.total)}</span></div>
+    <div style="margin-top:6px;font-size:9px;color:#888"><span>Pago: ${pMap[v.metodo_pago]||v.metodo_pago}</span></div>
+    <div class="tf">¡Gracias por tu visita!<br>@mtybeautylab · @beautylabmty</div>`;
+  G('tkov').classList.add('open');
+}
+function closeTk(){G('tkov').classList.remove('open');}
+function printTk(){window.print();}
+function newSale(){closeTk();renderCart();}
+
+// =============================================================
+// COMISIONES
+// =============================================================
+async function pgComm(){
+  const isA=CU.role==='admin';
+  if(isA){
+    G('tba').innerHTML=`
+      <select class="fc" id="comm-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgComm()">
+        ${Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
+          const v=d.toISOString().slice(0,7);
+          return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('')}
+      </select>`;
+  }
+  const mes=(G('comm-mes')?.value||new Date().toISOString().slice(0,7));
+  const ventas=await dbQ('bl_ventas');
+  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const estList=isA?STYLISTS:[CU];
+
+  G('ct').innerHTML=`
+    <div style="margin-bottom:14px">
+      ${isA?`<div style="font-size:11px;color:var(--g3)">${new Date(mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</div>`:''}
+    </div>
+    ${estList.map(s=>{
+      const sv=vM.filter(v=>v.estilista_id===s.id);
+      const totV=sv.reduce((a,v)=>a+(v.total||0),0);
+      const totC=sv.reduce((a,v)=>a+(v.comision||0),0);
+      const nSvcs=sv.reduce((a,v)=>a+(v.items?.length||0),0);
+      return`<div class="card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#060606">${s.name[0]}</div>
+          <div>
+            <div style="font-size:14px;font-weight:500">${s.name}</div>
+            <div style="font-size:10px;color:var(--g3)">${ROLES[s.role]} · ${Math.round(s.comm*100)}% comisión</div>
+          </div>
+          ${isA?`<div style="margin-left:auto"><span class="bx bg-gold">${mxn(s.salary)}/sem</span></div>`:''}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:12px">
+          <div><div style="font-size:9px;color:var(--g3)">Ventas Generadas</div><div style="font-family:var(--fd);font-size:20px;color:var(--gold)">${mxn(totV)}</div></div>
+          <div><div style="font-size:9px;color:var(--g3)">Comisión</div><div style="font-family:var(--fd);font-size:20px;color:var(--green)">${mxn(totC)}</div></div>
+          <div><div style="font-size:9px;color:var(--g3)">Servicios</div><div style="font-family:var(--fd);font-size:20px">${nSvcs}</div></div>
+        </div>
+        ${sv.length?`<div style="font-size:9px;color:var(--g3);margin-bottom:6px">Últimas ventas</div>
+        <div class="tw"><table>
+          <thead><tr><th>Fecha</th><th>Clienta</th><th>Total</th><th>Comisión</th><th>Pago</th></tr></thead>
+          <tbody>${sv.slice(0,6).map(v=>`<tr>
+            <td style="font-size:11px">${new Date(v.created_at).toLocaleDateString('es-MX')}</td>
+            <td>${v.cliente_nombre||'—'}</td>
+            <td style="color:var(--gold)">${mxn(v.total)}</td>
+            <td style="color:var(--green)">${mxn(v.comision)}</td>
+            <td><span class="bx bg-gray" style="font-size:9px">${v.metodo_pago||'—'}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`
+        :'<div class="empty" style="padding:12px"><div class="et">Sin ventas este mes</div></div>'}
+      </div>`;}).join('')}`;
+}
+
+// =============================================================
+// CATÁLOGO (admin only)
+// =============================================================
+async function pgCat(){
+  G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewPaq()">+ Nuevo Paquete</button>`;
+  let html=`<div class="tabs">`;
+  CATS.forEach((cat,i)=>{ html+=`<div class="tab ${i===0?'active':''}" onclick="catTab(this,'cat-${i}')">${cat}</div>`;});
+  html+=`<div class="tab" onclick="catTab(this,'cat-paq')">Paquetes</div></div>`;
+  CATS.forEach((cat,i)=>{
+    html+=`<div id="cat-${i}" ${i>0?'style="display:none"':''}>
+      <div class="card">
+        <table><thead><tr><th>Servicio</th><th>Precio</th></tr></thead>
+        <tbody>${CAT.filter(s=>s.cat===cat).map(s=>`<tr>
+          <td>${s.name}</td>
+          <td style="color:var(--gold)">${s.variable?'Variable':mxn(s.price)}</td>
+        </tr>`).join('')}</tbody></table>
+      </div></div>`;
+  });
+  html+=`<div id="cat-paq" style="display:none">
+    <div class="card">
+      <table><thead><tr><th>Paquete</th><th>Incluye</th><th>Precio</th></tr></thead>
+      <tbody>${PAQUETES.map(pk=>`<tr>
+        <td><strong>${pk.name}</strong></td>
+        <td style="font-size:11px;color:var(--g3)">${pk.items.join(', ')}</td>
+        <td style="color:var(--gold)">${mxn(pk.price)}</td>
+      </tr>`).join('')}</tbody></table>
+    </div></div>`;
+  G('ct').innerHTML=html;
+}
+function catTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  const allIds=['cat-paq',...CATS.map((_,i)=>`cat-${i}`)];
+  allIds.forEach(x=>{const d=G(x);if(d)d.style.display=x===id?'block':'none';});
+}
+function openNewPaq(){
+  toast('Para agregar paquetes, edita el array PAQUETES en el código fuente','');
+}
+
+// =============================================================
+// INVENTARIO
+// =============================================================
+async function pgInv(){
+  G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewProd()">+ Producto</button>`;
+  const prods=await dbQ('bl_inventario');
+  G('ct').innerHTML=`
+    <div class="card">
+      <div class="ct2">Inventario de Productos</div>
+      ${prods.length?`<div class="tw"><table>
+        <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Alerta</th><th></th></tr></thead>
+        <tbody>${prods.map(p=>{
+          const low=p.stock<=p.minimo;
+          return`<tr>
+            <td><strong>${p.nombre}</strong></td>
+            <td style="font-size:11px">${p.categoria||'—'}</td>
+            <td style="font-family:var(--fd);font-size:18px;color:${low?'var(--red)':'var(--gold)'}">${p.stock}</td>
+            <td style="font-size:11px;color:var(--g3)">${p.minimo||0}</td>
+            <td style="font-size:12px">${p.costo?mxn(p.costo):'—'}</td>
+            <td>${low?`<span class="bx bg-red">⚠ Bajo</span>`:`<span class="bx bg-green">OK</span>`}</td>
+            <td style="display:flex;gap:5px">
+              <button class="btn bg bsm" onclick="ajustarStock('${p.id}',${p.stock})">Ajustar</button>
+            </td>
+          </tr>`;}).join('')}</tbody>
+      </table></div>`
+      :'<div class="empty"><div class="ei">📦</div><div class="et">Sin productos registrados</div></div>'}
+    </div>`;
+}
+function openNewProd(){
+  openM(`
+    <div class="mt">✦ Nuevo Producto</div>
+    <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="np-n" placeholder="Ej: Shampoo Alfaparf"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Categoría</label>
+        <select class="fc" id="np-c">
+          <option>Shampoo/Acondicionador</option><option>Tintes</option><option>Tratamientos</option>
+          <option>Herramientas</option><option>Uñas</option><option>Maquillaje</option><option>Otro</option>
+        </select></div>
+      <div class="fg"><label class="fl">Stock actual</label><input class="fc" id="np-s" type="number" min="0" value="0"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Stock mínimo (alerta)</label><input class="fc" id="np-m" type="number" min="0" value="2"></div>
+      <div class="fg"><label class="fl">Costo unitario ($)</label><input class="fc" id="np-p" type="number" min="0"></div>
+    </div>
+    <div class="fg"><label class="fl">Notas</label><input class="fc" id="np-no" placeholder="Proveedor, referencia..."></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveProd()">Guardar</button>
+    </div>`);
+}
+async function saveProd(){
+  const n=G('np-n')?.value?.trim();
+  if(!n){toast('Nombre requerido','err');return;}
+  const r=await dbI('bl_inventario',{nombre:n,categoria:G('np-c')?.value,
+    stock:parseInt(G('np-s')?.value)||0,minimo:parseInt(G('np-m')?.value)||2,
+    costo:parseFloat(G('np-p')?.value)||0,notas:G('np-no')?.value,
+    created_at:new Date().toISOString()});
+  if(r){toast('Producto guardado ✓','ok');closeM();pgInv();}
+}
+function ajustarStock(id,actual){
+  openM(`
+    <div class="mt">Ajustar Stock</div>
+    <div class="fg"><label class="fl">Nuevo stock</label><input class="fc" id="as-v" type="number" min="0" value="${actual}"></div>
+    <div class="fg"><label class="fl">Motivo</label>
+      <select class="fc" id="as-m">
+        <option>Compra/Reposición</option><option>Ajuste de inventario</option><option>Merma/Pérdida</option>
+      </select></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="doAjusteStock('${id}')">Guardar</button>
+    </div>`);
+}
+async function doAjusteStock(id){
+  const v=parseInt(G('as-v')?.value)||0;
+  await dbU('bl_inventario',id,{stock:v});
+  toast('Stock actualizado ✓','ok');closeM();pgInv();
+}
+
+// =============================================================
+// FINANZAS (admin only)
+// =============================================================
+const MESES_OPT=()=>Array.from({length:12},(_,i)=>{
+  const d=new Date();d.setMonth(d.getMonth()-i);
+  const v=d.toISOString().slice(0,7);
+  return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;
+}).join('');
+
+async function pgFin(){
+  G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewEgreso()">+ Gasto Operativo</button>`;
+  G('ct').innerHTML=`
+    <div class="tabs">
+      <div class="tab active" onclick="finTab(this,'fin-resumen')">Resumen</div>
+      <div class="tab" onclick="finTab(this,'fin-diario')">Corte Diario</div>
+      <div class="tab" onclick="finTab(this,'fin-utilidad')">Utilidad por Mes</div>
+      <div class="tab" onclick="finTab(this,'fin-personas')">Por Persona</div>
+    </div>
+    <div id="fin-resumen"></div>
+    <div id="fin-diario" style="display:none"></div>
+    <div id="fin-utilidad" style="display:none"></div>
+    <div id="fin-personas" style="display:none"></div>`;
+  renderFinResumen();
+}
+
+function finTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['fin-resumen','fin-diario','fin-utilidad','fin-personas'].forEach(x=>{
+    const d=G(x);if(d)d.style.display=x===id?'block':'none';
+  });
+  if(id==='fin-resumen')renderFinResumen();
+  else if(id==='fin-diario')renderFinDiario();
+  else if(id==='fin-utilidad')renderFinUtilidad();
+  else if(id==='fin-personas')renderFinPersonas();
+}
+
+async function renderFinResumen(){
+  const w=G('fin-resumen');if(!w)return;
+  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <label class="fl" style="margin:0">Mes:</label>
+    <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT()}</select>
+  </div><div class="empty"><div class="et">Cargando...</div></div>`;
+  await new Promise(r=>setTimeout(r,0));
+  const mes=G('fr-mes')?.value||new Date().toISOString().slice(0,7);
+  const [ventas,egresos]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_egresos')]);
+  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const eM=egresos.filter(e=>(e.fecha||e.created_at||'').startsWith(mes));
+  const totI=vM.reduce((s,v)=>s+(v.total||0),0);
+  const totE=eM.reduce((s,e)=>s+(e.monto||0),0);
+  const totC=vM.reduce((s,v)=>s+(v.comision||0),0);
+  const util=totI-totE-totC;
+  w.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <label class="fl" style="margin:0">Mes:</label>
+      <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT()}</select>
+    </div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Ingresos Brutos</div><div class="kv">${mxn(totI)}</div><div class="ks">${vM.length} ventas</div></div>
+      <div class="kp"><div class="kl">Gastos Operativos</div><div class="kv" style="color:var(--red)">${mxn(totE)}</div></div>
+      <div class="kp"><div class="kl">Comisiones Equipo</div><div class="kv" style="color:var(--blue)">${mxn(totC)}</div></div>
+      <div class="kp"><div class="kl">Utilidad Real</div><div class="kv" style="color:${util>=0?'var(--green)':'var(--red)'}">${mxn(util)}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card">
+        <div class="ct2">Ingresos por Método de Pago</div>
+        ${['efectivo','transferencia','terminal'].map(m=>{
+          const t=vM.filter(v=>v.metodo_pago===m).reduce((s,v)=>s+(v.total||0),0);
+          const pct=totI?Math.round(t/totI*100):0;
+          const lbl={'efectivo':'💵 Efectivo','transferencia':'📲 Transferencia','terminal':'💳 Terminal'};
+          return`<div style="margin-bottom:11px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span>${lbl[m]}</span><span style="color:var(--gold)">${mxn(t)} <span style="color:var(--g3);font-size:10px">${pct}%</span></span>
+            </div>
+            <div style="height:4px;border-radius:2px;background:var(--border)">
+              <div style="height:100%;border-radius:2px;background:var(--gold);width:${pct}%"></div>
+            </div>
+          </div>`;}).join('')}
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+          <div style="font-size:9px;color:var(--g3);margin-bottom:6px">DESGLOSE UTILIDAD</div>
+          ${[['Ingresos',totI,'var(--gold)'],['- Gastos Op.',totE,'var(--red)'],['- Comisiones',totC,'var(--blue)'],['= Utilidad',util,util>=0?'var(--green)':'var(--red)']].map(([l,v,c])=>`
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;${l.startsWith('=')?'font-weight:600;border-top:1px solid var(--border);margin-top:3px;padding-top:6px':''}">
+              <span style="color:var(--g2)">${l}</span><span style="color:${c}">${mxn(v)}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct2" style="display:flex;align-items:center;justify-content:space-between">
+          Gastos Operativos
+          <button class="btn bg bsm" onclick="openNewEgreso()">+ Agregar</button>
+        </div>
+        ${eM.length?[...eM].sort((a,b)=>new Date(b.fecha||b.created_at)-new Date(a.fecha||a.created_at)).map(e=>`
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500">${e.concepto||'—'}</div>
+              <div style="font-size:10px;color:var(--g3)">${e.categoria||''} ${e.fecha?'· '+e.fecha:''}</div>
+            </div>
+            <div style="color:var(--red);font-size:13px;font-weight:600">${mxn(e.monto)}</div>
+            <button class="btn bd bsm" style="padding:3px 7px;font-size:10px" onclick="delEgreso('${e.id}')">✕</button>
+          </div>`).join('')
+        :'<div class="empty" style="padding:14px"><div class="et">Sin gastos registrados</div></div>'}
+        ${eM.length?`<div style="display:flex;justify-content:space-between;padding-top:9px;margin-top:3px;font-size:13px;font-weight:600">
+          <span style="color:var(--g2)">Total</span><span style="color:var(--red)">${mxn(totE)}</span>
+        </div>`:''}
+      </div>
+    </div>`;
+}
+
+async function renderFinDiario(){
+  const w=G('fin-diario');if(!w)return;
+  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <label class="fl" style="margin:0">Mes:</label>
+    <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT()}</select>
+  </div><div class="empty"><div class="et">Cargando...</div></div>`;
+  await new Promise(r=>setTimeout(r,0));
+  const mes=G('fd-mes')?.value||new Date().toISOString().slice(0,7);
+  const ventas=await dbQ('bl_ventas');
+  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const byDay={};
+  vM.forEach(v=>{
+    const dia=isoD(v.created_at);
+    if(!byDay[dia])byDay[dia]={ventas:[],total:0,comision:0,efectivo:0,transferencia:0,terminal:0};
+    byDay[dia].ventas.push(v);
+    byDay[dia].total+=(v.total||0);
+    byDay[dia].comision+=(v.comision||0);
+    byDay[dia][v.metodo_pago||'efectivo']+=(v.total||0);
+  });
+  const dias=Object.keys(byDay).sort((a,b)=>b.localeCompare(a));
+  const totMes=Object.values(byDay).reduce((s,d)=>s+d.total,0);
+  w.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <label class="fl" style="margin:0">Mes:</label>
+      <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT()}</select>
+    </div>
+    <div class="kg" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px">
+      <div class="kp"><div class="kl">Total del Mes</div><div class="kv">${mxn(totMes)}</div></div>
+      <div class="kp"><div class="kl">Días con Ventas</div><div class="kv">${dias.length}</div></div>
+      <div class="kp"><div class="kl">Promedio Diario</div><div class="kv">${mxn(dias.length?Math.round(totMes/dias.length):0)}</div></div>
+    </div>
+    ${dias.length?dias.map(dia=>{
+      const d=byDay[dia];
+      const fd=new Date(dia+'T12:00:00').toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'});
+      return`<div class="card" style="margin-bottom:9px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+          <div>
+            <div style="font-size:13px;font-weight:600;text-transform:capitalize">${fd}</div>
+            <div style="font-size:10px;color:var(--g3)">${d.ventas.length} venta(s) · comisiones ${mxn(d.comision)}</div>
+          </div>
+          <div style="font-family:var(--fd);font-size:22px;color:var(--gold)">${mxn(d.total)}</div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
+          ${d.efectivo?`<span class="bx bg-gray">💵 ${mxn(d.efectivo)}</span>`:''}
+          ${d.transferencia?`<span class="bx bg-blue">📲 ${mxn(d.transferencia)}</span>`:''}
+          ${d.terminal?`<span class="bx bg-gold">💳 ${mxn(d.terminal)}</span>`:''}
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Estilista</th><th>Clienta</th><th>Servicios</th><th>Total</th><th>Pago</th></tr></thead>
+          <tbody>${d.ventas.map(v=>`<tr>
+            <td style="color:${STAFF.find(s=>s.id===v.estilista_id)?.color||'#fff'};font-size:12px">${v.estilista_nombre||'—'}</td>
+            <td style="font-size:12px">${v.cliente_nombre||'—'}</td>
+            <td style="font-size:10px;color:var(--g3);max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(v.items||[]).map(i=>i.name).join(', ')||'—'}</td>
+            <td style="color:var(--gold);font-weight:600">${mxn(v.total)}</td>
+            <td><span class="bx bg-gray" style="font-size:9px">${v.metodo_pago||'—'}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`;}).join('')
+    :'<div class="empty"><div class="ei">📊</div><div class="et">Sin ventas en este mes</div></div>'}`;
+}
+
+async function renderFinUtilidad(){
+  const w=G('fin-utilidad');if(!w)return;
+  w.innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
+  const [ventas,egresos]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_egresos')]);
+  const meses=Array.from({length:6},(_,i)=>{
+    const d=new Date();d.setMonth(d.getMonth()-i);return d.toISOString().slice(0,7);
+  }).reverse();
+  const rows=meses.map(mes=>{
+    const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+    const eM=egresos.filter(e=>(e.fecha||e.created_at||'').startsWith(mes));
+    const ing=vM.reduce((s,v)=>s+(v.total||0),0);
+    const gas=eM.reduce((s,e)=>s+(e.monto||0),0);
+    const com=vM.reduce((s,v)=>s+(v.comision||0),0);
+    const util=ing-gas-com;
+    return{mes,ing,gas,com,util,nVentas:vM.length};
+  });
+  const maxIng=Math.max(...rows.map(r=>r.ing),1);
+  const totalUtil=rows.reduce((s,r)=>s+r.util,0);
+  const mejorMes=rows.reduce((a,b)=>b.util>a.util?b:a,rows[0]);
+  w.innerHTML=`
+    <div class="kg" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px">
+      <div class="kp"><div class="kl">Utilidad Acumulada</div><div class="kv" style="color:${totalUtil>=0?'var(--green)':'var(--red)'}">${mxn(totalUtil)}</div><div class="ks">últimos 6 meses</div></div>
+      <div class="kp"><div class="kl">Mejor Mes</div><div class="kv">${mxn(mejorMes?.util||0)}</div><div class="ks">${new Date((mejorMes?.mes||'')+'-01').toLocaleDateString('es-MX',{month:'short',year:'2-digit'})}</div></div>
+      <div class="kp"><div class="kl">Promedio Mensual</div><div class="kv">${mxn(Math.round(totalUtil/6))}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ct2">Tendencia 6 Meses</div>
+      ${rows.map(r=>{
+        const label=new Date(r.mes+'-01').toLocaleDateString('es-MX',{month:'short',year:'2-digit'});
+        return`<div style="margin-bottom:13px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;text-transform:capitalize;min-width:70px">${new Date(r.mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</span>
+            <span style="font-family:var(--fd);font-size:15px;color:${r.util>=0?'var(--green)':'var(--red)'};">${mxn(r.util)}</span>
+          </div>
+          <div style="position:relative;height:20px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:3px">
+            <div style="position:absolute;left:0;top:0;height:100%;background:var(--gold);opacity:.2;width:${Math.round(r.ing/maxIng*100)}%"></div>
+            <div style="position:absolute;left:0;top:0;height:100%;background:${r.util>=0?'var(--green)':'var(--red)'};width:${Math.max(0,Math.round(r.util/maxIng*100))}%"></div>
+          </div>
+          <div style="display:flex;gap:10px;font-size:10px;color:var(--g3)">
+            <span>Ing <span style="color:var(--gold)">${mxn(r.ing)}</span></span>
+            <span>Gastos <span style="color:var(--red)">${mxn(r.gas)}</span></span>
+            <span>Com. <span style="color:var(--blue)">${mxn(r.com)}</span></span>
+            <span>${r.nVentas} ventas</span>
+          </div>
+        </div>`;}).join('')}
+    </div>
+    <div class="card">
+      <div class="ct2">Tabla Comparativa</div>
+      <div class="tw"><table>
+        <thead><tr><th>Mes</th><th>Ingresos</th><th>Gastos Op.</th><th>Comisiones</th><th>Utilidad Real</th><th>Margen</th></tr></thead>
+        <tbody>${[...rows].reverse().map(r=>{
+          const margen=r.ing?Math.round(r.util/r.ing*100):0;
+          return`<tr>
+            <td style="font-weight:500">${new Date(r.mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</td>
+            <td style="color:var(--gold)">${mxn(r.ing)}</td>
+            <td style="color:var(--red)">${mxn(r.gas)}</td>
+            <td style="color:var(--blue)">${mxn(r.com)}</td>
+            <td style="font-weight:700;color:${r.util>=0?'var(--green)':'var(--red)'}">${mxn(r.util)}</td>
+            <td><span class="bx ${margen>=30?'bg-green':margen>=0?'bg-gold':'bg-red'}">${margen}%</span></td>
+          </tr>`;}).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+}
+
+async function renderFinPersonas(){
+  const w=G('fin-personas');if(!w)return;
+  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <label class="fl" style="margin:0">Mes:</label>
+    <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT()}</select>
+  </div><div class="empty"><div class="et">Cargando...</div></div>`;
+  await new Promise(r=>setTimeout(r,0));
+  const mes=G('fp-mes')?.value||new Date().toISOString().slice(0,7);
+  const ventas=await dbQ('bl_ventas');
+  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const totMes=vM.reduce((s,v)=>s+(v.total||0),0);
+  const data=STYLISTS.map(s=>{
+    const sv=vM.filter(v=>v.estilista_id===s.id);
+    const bruto=sv.reduce((a,v)=>a+(v.total||0),0);
+    const comm=sv.reduce((a,v)=>a+(v.comision||0),0);
+    const neto=bruto-comm;
+    const pct=totMes?Math.round(bruto/totMes*100):0;
+    const nSvcs=sv.reduce((a,v)=>a+(v.items?.length||0),0);
+    const ticket=sv.length?Math.round(bruto/sv.length):0;
+    return{...s,sv,bruto,comm,neto,pct,nSvcs,ticket};
+  }).sort((a,b)=>b.bruto-a.bruto);
+  w.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <label class="fl" style="margin:0">Mes:</label>
+      <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT()}</select>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ct2">Comparativo del Equipo · ${new Date(mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</div>
+      <div class="tw"><table>
+        <thead><tr><th>Persona</th><th>Ventas Brutas</th><th>% Total</th><th>Comisión</th><th>Aportación Neta</th><th>Servicios</th><th>Ticket Prom.</th></tr></thead>
+        <tbody>
+          ${data.map(s=>`<tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="width:22px;height:22px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#060606">${s.name[0]}</div>
+                <div><div style="font-size:12px;font-weight:500">${s.name}</div><div style="font-size:9px;color:var(--g3)">${ROLES[s.role]}</div></div>
+              </div>
+            </td>
+            <td style="color:var(--gold);font-weight:600">${mxn(s.bruto)}</td>
+            <td><span class="bx bg-gold">${s.pct}%</span></td>
+            <td style="color:var(--blue)">${mxn(s.comm)}</td>
+            <td style="color:var(--green);font-weight:700">${mxn(s.neto)}</td>
+            <td>${s.nSvcs}</td>
+            <td style="color:var(--g2)">${mxn(s.ticket)}</td>
+          </tr>`).join('')}
+          <tr style="border-top:2px solid var(--border)">
+            <td style="font-weight:700">TOTAL</td>
+            <td style="color:var(--gold);font-weight:700">${mxn(totMes)}</td>
+            <td>100%</td>
+            <td style="color:var(--blue)">${mxn(data.reduce((s,d)=>s+d.comm,0))}</td>
+            <td style="color:var(--green);font-weight:700">${mxn(data.reduce((s,d)=>s+d.neto,0))}</td>
+            <td>${data.reduce((s,d)=>s+d.nSvcs,0)}</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>
+    ${data.map(s=>`
+      <div class="card" style="margin-bottom:9px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#060606">${s.name[0]}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${s.name} <span style="font-size:10px;color:var(--g3);font-weight:400">${ROLES[s.role]}</span></div>
+            <div style="font-size:10px;color:var(--g3)">Sueldo base ${mxn(s.salary)}/sem · Comisión ${Math.round(s.comm*100)}%</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:var(--g3)">Aportación neta</div>
+            <div style="font-family:var(--fd);font-size:20px;color:var(--green)">${mxn(s.neto)}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:11px">
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Ventas Brutas</div>
+            <div style="font-family:var(--fd);font-size:18px;color:var(--gold)">${mxn(s.bruto)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Comisión a Pagar</div>
+            <div style="font-family:var(--fd);font-size:18px;color:var(--blue)">${mxn(s.comm)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Deja a la Empresa</div>
+            <div style="font-family:var(--fd);font-size:18px;color:var(--green)">${mxn(s.neto)}</div>
+          </div>
+        </div>
+        <div style="height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-bottom:4px">
+          <div style="height:100%;border-radius:3px;background:${s.color};width:${s.pct}%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--g3)">${s.pct}% de ventas totales · ${s.nSvcs} servicios · ticket promedio ${mxn(s.ticket)}</div>
+      </div>`).join('')}`;
+}
+
+function openNewEgreso(){
+  openM(`
+    <div class="mt">✦ Gasto Operativo</div>
+    <div class="fg"><label class="fl">Concepto *</label><input class="fc" id="eg-c" placeholder="Ej: Renta, luz, productos..."></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Monto ($) *</label><input class="fc" id="eg-m" type="number" min="0"></div>
+      <div class="fg"><label class="fl">Categoría</label>
+        <select class="fc" id="eg-cat">
+          <option>Renta</option><option>Productos/Insumos</option><option>Luz / Agua / Gas</option>
+          <option>Internet / Teléfono</option><option>Equipo</option><option>Nómina</option>
+          <option>Publicidad</option><option>Mantenimiento</option><option>Otro</option>
+        </select></div>
+    </div>
+    <div class="fg"><label class="fl">Fecha</label><input class="fc" id="eg-f" type="date" value="${today()}"></div>
+    <div class="fg"><label class="fl">Notas</label><input class="fc" id="eg-n" placeholder="Opcional..."></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveEgreso()">Guardar</button>
+    </div>`);
+}
+async function saveEgreso(){
+  const c=G('eg-c')?.value?.trim(),m=parseFloat(G('eg-m')?.value)||0;
+  if(!c||!m){toast('Concepto y monto requeridos','err');return;}
+  const r=await dbI('bl_egresos',{concepto:c,monto:m,categoria:G('eg-cat')?.value,
+    fecha:G('eg-f')?.value,notas:G('eg-n')?.value,created_at:new Date().toISOString()});
+  if(r){toast('Gasto guardado ✓','ok');closeM();renderFinResumen();}
+}
+async function delEgreso(id){
+  if(!confirm('¿Eliminar este gasto?'))return;
+  await dbD('bl_egresos',id);
+  toast('Eliminado','');renderFinResumen();
+}
+
+// =============================================================
+// REPORTES
+// =============================================================
+async function pgRep(){
+  G('tba').innerHTML=`
+    <select class="fc" id="rep-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgRep()">
+      ${Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
+        const v=d.toISOString().slice(0,7);
+        return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('')}
+    </select>`;
+  const mes=G('rep-mes')?.value||new Date().toISOString().slice(0,7);
+  const [ventas,citas,clis]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_citas'),dbQ('bl_clientes')]);
+  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const cM=citas.filter(c=>(c.fecha||'').startsWith(mes));
+
+  // Servicios más vendidos
+  const svcCount={};
+  vM.forEach(v=>(v.items||[]).forEach(i=>{svcCount[i.name]=(svcCount[i.name]||0)+i.qty;}));
+  const topSvc=Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Clientes recurrentes vs nuevos (simplificado)
+  const noShow=cM.filter(c=>c.estado==='cancelada').length;
+  const compl=cM.filter(c=>c.estado==='completada').length;
+  const totalCitas=cM.length;
+
+  G('ct').innerHTML=`
+    <div class="kg">
+      <div class="kp"><div class="kl">Citas Completadas</div><div class="kv" style="color:var(--green)">${compl}</div><div class="ks">de ${totalCitas} totales</div></div>
+      <div class="kp"><div class="kl">Canceladas</div><div class="kv" style="color:var(--red)">${noShow}</div></div>
+      <div class="kp"><div class="kl">Ticket Promedio</div><div class="kv">${mxn(vM.length?Math.round(vM.reduce((s,v)=>s+(v.total||0),0)/vM.length):0)}</div></div>
+      <div class="kp"><div class="kl">Total Clientas</div><div class="kv">${clis.length}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card">
+        <div class="ct2">Servicios Más Vendidos</div>
+        ${topSvc.length?topSvc.map(([name,qty],i)=>`
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;color:var(--g3);min-width:16px">#${i+1}</span>
+            <span style="font-size:12px;flex:1">${name}</span>
+            <span class="bx bg-gold">${qty}x</span>
+          </div>`).join('')
+        :'<div class="empty" style="padding:12px"><div class="et">Sin datos</div></div>'}
+      </div>
+      <div class="card">
+        <div class="ct2">Ventas por Estilista</div>
+        ${STYLISTS.map(s=>{
+          const sv=vM.filter(v=>v.estilista_id===s.id);
+          const tot=sv.reduce((a,v)=>a+(v.total||0),0);
+          const pct=vM.reduce((a,v)=>a+(v.total||0),0);
+          const p=pct?Math.round(tot/pct*100):0;
+          return`<div style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+              <div style="width:7px;height:7px;border-radius:50%;background:${s.color}"></div>
+              <span style="font-size:12px;flex:1">${s.name}</span>
+              <span style="font-size:12px;color:var(--gold)">${mxn(tot)}</span>
+              <span style="font-size:10px;color:var(--g3)">${p}%</span>
+            </div>
+            <div style="height:4px;border-radius:2px;background:var(--border)">
+              <div style="height:100%;border-radius:2px;background:${s.color};width:${p}%;transition:width .4s"></div>
+            </div>
+          </div>`;}).join('')}
+      </div>
+    </div>`;
+}
+
+// =============================================================
+// BOOKING PÚBLICO
+// =============================================================
+function showBooking(){
+  G('bks').style.display='block';
+  let bkSel={svc:[],est:null,fecha:'',hora:'',nombre:'',tel:''};
+  let bkStep=1;
+  render();
+
+  function render(){
+    const w=G('bkw');
+    if(bkStep===1){
+      w.innerHTML=`
+        <div class="bk-t">Selecciona tus servicios</div>
+        ${CATS.slice(0,6).map(cat=>`
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--g3);padding:10px 0 5px;border-top:1px solid var(--border)">${cat}</div>
+          <div class="bk-sg">${CAT.filter(s=>s.cat===cat).slice(0,6).map(s=>`
+            <div class="bk-s ${bkSel.svc.includes(s.name)?'sel':''}" onclick="bkTogSvc('${s.name}',this)">
+              <div class="bk-sn">${s.name}</div>
+              <div class="bk-sp">${s.variable?'Variable':mxn(s.price)}</div>
+            </div>`).join('')}</div>`).join('')}
+        <button class="btn bp" style="width:100%;margin-top:16px" onclick="bkNext(2)" ${!bkSel.svc.length?'disabled':''}>Continuar →</button>`;
+    } else if(bkStep===2){
+      w.innerHTML=`
+        <div class="bk-t">¿Con quién?</div>
+        <div class="bk-sg" style="grid-template-columns:1fr">
+          ${STYLISTS.map(s=>`
+            <div class="bk-s ${bkSel.est===s.id?'sel':''}" onclick="bkTogEst('${s.id}',this)" style="display:flex;align-items:center;gap:10px;text-align:left">
+              <div style="width:36px;height:36px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#060606">${s.name[0]}</div>
+              <div><div style="font-size:13px;font-weight:500">${s.name}</div><div style="font-size:10px;color:var(--g3)">${ROLES[s.role]}</div></div>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn bg" style="flex:1" onclick="bkNext(1)">← Atrás</button>
+          <button class="btn bp" style="flex:2" onclick="bkNext(3)" ${!bkSel.est?'disabled':''}>Continuar →</button>
+        </div>`;
+    } else if(bkStep===3){
+      const times=['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','14:00','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+      w.innerHTML=`
+        <div class="bk-t">Fecha y hora</div>
+        <div class="fg"><label class="fl">Fecha</label><input class="fc" id="bk-f" type="date" min="${today()}" value="${bkSel.fecha||today()}" onchange="bkSel.fecha=this.value"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+          ${times.map(t=>`<button class="btn bg bsm ${bkSel.hora===t?'bp':''}" onclick="bkSelH('${t}',this)">${t}</button>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn bg" style="flex:1" onclick="bkNext(2)">← Atrás</button>
+          <button class="btn bp" style="flex:2" onclick="bkNext(4)" ${!bkSel.hora?'disabled':''}>Continuar →</button>
+        </div>`;
+    } else if(bkStep===4){
+      const est=STAFF.find(s=>s.id===bkSel.est);
+      w.innerHTML=`
+        <div class="bk-t">Tus datos</div>
+        <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="bk-n" placeholder="Tu nombre completo" value="${bkSel.nombre}" oninput="bkSel.nombre=this.value"></div>
+        <div class="fg"><label class="fl">WhatsApp *</label><input class="fc" id="bk-t" type="tel" placeholder="81 0000 0000" value="${bkSel.tel}" oninput="bkSel.tel=this.value"></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px">
+          <div style="font-size:10px;color:var(--g3);margin-bottom:8px">RESUMEN DE TU CITA</div>
+          <div style="font-size:12px"><strong>${est?.name||''}</strong> · ${bkSel.fecha} a las ${bkSel.hora}</div>
+          <div class="chips" style="margin-top:6px">${bkSel.svc.map(s=>`<span class="chip sel">${s}</span>`).join('')}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn bg" style="flex:1" onclick="bkNext(3)">← Atrás</button>
+          <button class="btn bp" style="flex:2" onclick="bkConfirmar()">Confirmar Cita ✓</button>
+        </div>`;
+    }
+    window.bkSel=bkSel;
+    window.bkNext=function(s){bkStep=s;render();};
+    window.bkTogSvc=function(n,el){
+      el.classList.toggle('sel');
+      bkSel.svc.includes(n)?(bkSel.svc=bkSel.svc.filter(x=>x!==n)):bkSel.svc.push(n);
+      render();
+    };
+    window.bkTogEst=function(id){bkSel.est=id;render();};
+    window.bkSelH=function(h){bkSel.hora=h;render();};
+    window.bkConfirmar=async function(){
+      if(!bkSel.nombre||!bkSel.tel){toast('Nombre y teléfono requeridos','err');return;}
+      let cli=null;
+      const ec=await sb.from('bl_clientes').select('*').eq('telefono',bkSel.tel).single().catch(()=>({data:null}));
+      if(ec.data){cli=ec.data;}
+      else{cli=await dbI('bl_clientes',{nombre:bkSel.nombre,telefono:bkSel.tel,created_at:new Date().toISOString()});}
+      const r=await dbI('bl_citas',{
+        fecha:bkSel.fecha||today(),hora_inicio:bkSel.hora,hora_fin:'',
+        estilista_id:bkSel.est,cliente_id:cli?.id||null,
+        cliente_nombre:bkSel.nombre,servicios:bkSel.svc,
+        notas:'Reserva online',estado:'pendiente',
+        created_at:new Date().toISOString()
+      });
+      if(r){
+        G('bkw').innerHTML=`<div style="text-align:center;padding:50px 20px">
+          <div style="font-size:48px;margin-bottom:16px">✨</div>
+          <div style="font-family:var(--fd);font-size:28px;color:var(--gold);margin-bottom:8px">¡Cita Confirmada!</div>
+          <div style="font-size:13px;color:var(--g2);margin-bottom:6px">${bkSel.fecha} · ${bkSel.hora}</div>
+          <div style="font-size:13px;color:var(--g2)">Con ${STAFF.find(s=>s.id===bkSel.est)?.name||''}</div>
+          <div style="margin-top:20px;font-size:12px;color:var(--g3)">Te contactaremos por WhatsApp para confirmar.</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--g3)">@mtybeautylab</div>
+        </div>`;
+      }
+    };
+  }
+}
+
+// =============================================================
+// NÓMINA SEMANAL
+// =============================================================
+
+// Helpers de semana
+function getLunes(d){
+  const dt=new Date(d);
+  const day=dt.getDay();
+  const diff=dt.getDate()-day+(day===0?-6:1);
+  dt.setDate(diff);dt.setHours(0,0,0,0);return dt;
+}
+function getSemanaStr(lunes){
+  const dom=new Date(lunes);dom.setDate(dom.getDate()+6);
+  const f=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+  return`${f(lunes)} – ${f(dom)}`;
+}
+function isoSemana(lunes){return lunes.toISOString().slice(0,10);}
+
+let nomSemana=getLunes(new Date());
+
+async function pgNomina(){
+  G('tba').innerHTML=``;
+  G('ct').innerHTML=`
+    <div class="tabs">
+      <div class="tab active" onclick="nomTab(this,'nom-calc')">Calcular Nómina</div>
+      <div class="tab" onclick="nomTab(this,'nom-hist')">Historial de Pagos</div>
+    </div>
+    <div id="nom-calc"></div>
+    <div id="nom-hist" style="display:none"></div>`;
+  renderNomCalc();
+}
+
+function nomTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  G('nom-calc').style.display=id==='nom-calc'?'block':'none';
+  G('nom-hist').style.display=id==='nom-hist'?'block':'none';
+  if(id==='nom-calc')renderNomCalc();
+  else renderNomHist();
+}
+
+async function renderNomCalc(){
+  const w=G('nom-calc');if(!w)return;
+  const lunes=nomSemana;
+  const dom=new Date(lunes);dom.setDate(dom.getDate()+6);
+  const semStr=getSemanaStr(lunes);
+  const semKey=isoSemana(lunes);
+
+  // Ventas de la semana
+  const ventas=await dbQ('bl_ventas');
+  const vSem=ventas.filter(v=>{
+    const d=new Date(v.created_at);
+    return d>=lunes&&d<=dom;
+  });
+
+  // Nóminas ya pagadas esta semana
+  const pagos=await dbQ('bl_nominas');
+  const pagSem=pagos.filter(p=>p.semana===semKey);
+
+  const rows=STYLISTS.map(s=>{
+    const sv=vSem.filter(v=>v.estilista_id===s.id);
+    const venBruto=sv.reduce((a,v)=>a+(v.total||0),0);
+    const comision=sv.reduce((a,v)=>a+(v.comision||0),0);
+    const total=s.salary+comision;
+    const pagado=pagSem.find(p=>p.estilista_id===s.id);
+    return{...s,sv,venBruto,comision,total,pagado};
+  });
+
+  const totalNom=rows.reduce((s,r)=>s+r.total,0);
+
+  w.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn bg bsm" onclick="nomNav(-7)">◀</button>
+      <div style="font-family:var(--fd);font-size:17px;flex:1;text-align:center">
+        Semana del <span style="color:var(--gold)">${semStr}</span>
+      </div>
+      <button class="btn bg bsm" onclick="nomNav(7)" ${lunes>=getLunes(new Date())?'disabled':''}>▶</button>
+      <button class="btn bg bsm" onclick="nomSemana=getLunes(new Date());renderNomCalc()">Esta semana</button>
+    </div>
+    <div class="kg" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px">
+      <div class="kp"><div class="kl">Total a Pagar</div><div class="kv">${mxn(totalNom)}</div></div>
+      <div class="kp"><div class="kl">Ventas Generadas</div><div class="kv" style="color:var(--gold)">${mxn(vSem.reduce((s,v)=>s+(v.total||0),0))}</div></div>
+      <div class="kp"><div class="kl">Pagadas</div><div class="kv" style="color:var(--green)">${pagSem.length} / ${STYLISTS.length}</div></div>
+    </div>
+    ${rows.map(r=>`
+      <div class="card" style="margin-bottom:10px;${r.pagado?'opacity:.75':''}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:38px;height:38px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#060606">${r.name[0]}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${r.name}</div>
+            <div style="font-size:10px;color:var(--g3)">${ROLES[r.role]}</div>
+          </div>
+          ${r.pagado
+            ?`<span class="bx bg-green">✓ Pagada ${new Date(r.pagado.created_at).toLocaleDateString('es-MX')}</span>`
+            :`<div style="display:flex;gap:6px">
+               <button class="btn bg bsm" onclick="imprimirRecibo('${r.id}','${semKey}','${semStr}',${r.salary},${r.comision},${r.venBruto},${r.total})">🖨 Recibo</button>
+               <button class="btn bp bsm" onclick="marcarPagada('${r.id}','${r.name}','${semKey}','${semStr}',${r.salary},${r.comision},${r.total})">Marcar pagada</button>
+             </div>`}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Sueldo Base</div>
+            <div style="font-family:var(--fd);font-size:17px">${mxn(r.salary)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Ventas</div>
+            <div style="font-family:var(--fd);font-size:17px;color:var(--gold)">${mxn(r.venBruto)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Comisión (${Math.round(r.comm*100)}%)</div>
+            <div style="font-family:var(--fd);font-size:17px;color:var(--blue)">${mxn(r.comision)}</div>
+          </div>
+          <div style="background:var(--gd);border:1px solid var(--gb);border-radius:8px;padding:10px">
+            <div style="font-size:9px;color:var(--g3)">Total a Pagar</div>
+            <div style="font-family:var(--fd);font-size:17px;color:var(--gold);font-weight:600">${mxn(r.total)}</div>
+          </div>
+        </div>
+        ${r.sv.length?`
+          <div style="font-size:9px;color:var(--g3);margin-bottom:6px">${r.sv.length} venta(s) esta semana</div>
+          <div class="tw"><table>
+            <thead><tr><th>Fecha</th><th>Clienta</th><th>Venta</th><th>Comisión</th></tr></thead>
+            <tbody>${r.sv.map(v=>`<tr>
+              <td style="font-size:11px">${new Date(v.created_at).toLocaleDateString('es-MX')}</td>
+              <td style="font-size:12px">${v.cliente_nombre||'—'}</td>
+              <td style="color:var(--gold)">${mxn(v.total)}</td>
+              <td style="color:var(--blue)">${mxn(v.comision)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>`
+        :`<div style="font-size:12px;color:var(--g3);text-align:center;padding:8px">Sin ventas esta semana — se paga solo el base</div>`}
+      </div>`).join('')}`;
+}
+
+function nomNav(dias){
+  nomSemana=getLunes(new Date(nomSemana.getTime()+dias*24*60*60*1000));
+  renderNomCalc();
+}
+
+async function marcarPagada(estId,nombre,semKey,semStr,base,comm,total){
+  openM(`
+    <div class="mt">✦ Confirmar Pago · ${nombre}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px">
+      <div style="background:var(--bg3);border-radius:8px;padding:12px">
+        <div style="font-size:9px;color:var(--g3)">Sueldo Base</div>
+        <div style="font-family:var(--fd);font-size:20px">${mxn(base)}</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px">
+        <div style="font-size:9px;color:var(--g3)">Comisión</div>
+        <div style="font-family:var(--fd);font-size:20px;color:var(--blue)">${mxn(comm)}</div>
+      </div>
+    </div>
+    <div style="background:var(--gd);border:1px solid var(--gb);border-radius:8px;padding:14px;text-align:center;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--g3)">TOTAL A PAGAR</div>
+      <div style="font-family:var(--fd);font-size:32px;color:var(--gold)">${mxn(total)}</div>
+      <div style="font-size:10px;color:var(--g3);margin-top:3px">Semana: ${semStr}</div>
+    </div>
+    <div class="fg"><label class="fl">Método de pago</label>
+      <select class="fc" id="np-met">
+        <option value="efectivo">💵 Efectivo</option>
+        <option value="transferencia">📲 Transferencia</option>
+      </select></div>
+    <div class="fg"><label class="fl">Notas (opcional)</label>
+      <input class="fc" id="np-not" placeholder="Observaciones..."></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="confirmarPago('${estId}','${nombre}','${semKey}','${semStr}',${base},${comm},${total})">Confirmar Pago ✓</button>
+    </div>`);
+}
+
+async function confirmarPago(estId,nombre,semKey,semStr,base,comm,total){
+  const met=G('np-met')?.value;
+  const not=G('np-not')?.value;
+  const r=await dbI('bl_nominas',{
+    estilista_id:estId,estilista_nombre:nombre,
+    semana:semKey,semana_str:semStr,
+    sueldo_base:base,comision:comm,total,
+    metodo_pago:met,notas:not,
+    created_at:new Date().toISOString()
+  });
+  if(r){toast(`Nómina de ${nombre} marcada como pagada ✓`,'ok');closeM();renderNomCalc();}
+}
+
+function imprimirRecibo(estId,semKey,semStr,base,comm,venBruto,total){
+  const est=STAFF.find(s=>s.id===estId);
+  const fecha=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const win=window.open('','_blank','width=380,height=560');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Courier New',monospace;font-size:12px;color:#111;background:#fff;padding:28px;width:340px}
+      .hdr{text-align:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed #bbb}
+      .logo{font-size:22px;font-weight:700;letter-spacing:4px}
+      .sub{font-size:9px;letter-spacing:2px;color:#777;margin-top:3px}
+      .row{display:flex;justify-content:space-between;padding:3px 0}
+      .row.sep{border-top:1px dashed #bbb;margin-top:8px;padding-top:8px;font-weight:700;font-size:13px}
+      .sec{margin:10px 0;padding:8px;border:1px solid #ddd;border-radius:4px}
+      .sec-t{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:6px}
+      .footer{text-align:center;margin-top:16px;padding-top:14px;border-top:1px dashed #bbb;font-size:9px;color:#aaa}
+      @media print{body{padding:0}}
+    </style></head><body>
+    <div class="hdr">
+      <div class="logo">BEAUTY LAB</div>
+      <div class="sub">RECIBO DE NÓMINA</div>
+    </div>
+    <div style="margin-bottom:10px;font-size:11px;color:#555">
+      <div><strong>${est?.name||nombre}</strong> · ${ROLES[est?.role||'']}</div>
+      <div style="margin-top:2px">Semana: ${semStr}</div>
+      <div>Fecha de pago: ${fecha}</div>
+    </div>
+    <div class="sec">
+      <div class="sec-t">Desglose</div>
+      <div class="row"><span>Sueldo base semanal</span><span>$${base.toLocaleString('es-MX')}</span></div>
+      <div class="row"><span>Ventas generadas</span><span>$${venBruto.toLocaleString('es-MX')}</span></div>
+      <div class="row"><span>Comisión (${Math.round(est?.comm*100||0)}%)</span><span>$${comm.toLocaleString('es-MX')}</span></div>
+      <div class="row sep"><span>TOTAL A COBRAR</span><span>$${total.toLocaleString('es-MX')}</span></div>
+    </div>
+    <div style="margin-top:40px;display:flex;justify-content:space-between;font-size:10px">
+      <div style="text-align:center;border-top:1px solid #bbb;padding-top:5px;min-width:120px">
+        <div>Firma empleada</div>
+        <div style="color:#999">${est?.name||''}</div>
+      </div>
+      <div style="text-align:center;border-top:1px solid #bbb;padding-top:5px;min-width:120px">
+        <div>Firma empleador</div>
+        <div style="color:#999">Beauty Lab</div>
+      </div>
+    </div>
+    <div class="footer">Beauty Lab · Monterrey, N.L.<br>@mtybeautylab</div>
+    <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+async function renderNomHist(){
+  const w=G('nom-hist');if(!w)return;
+  w.innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
+  const pagos=await dbQ('bl_nominas');
+
+  // Agrupar por semana
+  const bySem={};
+  pagos.forEach(p=>{
+    if(!bySem[p.semana])bySem[p.semana]={semana_str:p.semana_str,pagos:[],total:0};
+    bySem[p.semana].pagos.push(p);
+    bySem[p.semana].total+=(p.total||0);
+  });
+  const sems=Object.keys(bySem).sort((a,b)=>b.localeCompare(a));
+
+  if(!sems.length){
+    w.innerHTML='<div class="empty"><div class="ei">💰</div><div class="et">Sin pagos registrados aún</div></div>';
+    return;
+  }
+
+  const totalHist=pagos.reduce((s,p)=>s+(p.total||0),0);
+
+  w.innerHTML=`
+    <div class="kg" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+      <div class="kp"><div class="kl">Total Pagado (histórico)</div><div class="kv">${mxn(totalHist)}</div></div>
+      <div class="kp"><div class="kl">Semanas Pagadas</div><div class="kv">${sems.length}</div></div>
+    </div>
+    ${sems.map(semKey=>{
+      const s=bySem[semKey];
+      return`<div class="card" style="margin-bottom:9px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600">Semana del ${s.semana_str}</div>
+            <div style="font-size:10px;color:var(--g3)">${s.pagos.length} pago(s) registrado(s)</div>
+          </div>
+          <div style="font-family:var(--fd);font-size:20px;color:var(--gold)">${mxn(s.total)}</div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Persona</th><th>Base</th><th>Comisión</th><th>Total</th><th>Método</th><th>Fecha</th></tr></thead>
+          <tbody>${s.pagos.map(p=>{
+            const est=STAFF.find(x=>x.id===p.estilista_id);
+            return`<tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div style="width:20px;height:20px;border-radius:50%;background:${est?.color||'#555'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#060606">${(p.estilista_nombre||'?')[0]}</div>
+                  <span style="font-size:12px">${p.estilista_nombre||'—'}</span>
+                </div>
+              </td>
+              <td style="font-size:12px">${mxn(p.sueldo_base)}</td>
+              <td style="color:var(--blue)">${mxn(p.comision)}</td>
+              <td style="color:var(--gold);font-weight:600">${mxn(p.total)}</td>
+              <td><span class="bx bg-gray" style="font-size:9px">${p.metodo_pago||'—'}</span></td>
+              <td style="font-size:10px;color:var(--g3)">${new Date(p.created_at).toLocaleDateString('es-MX')}</td>
+            </tr>`;}).join('')}
+          </tbody>
+        </table></div>
+      </div>`;}).join('')}`;
+}
+
+// =============================================================
+// SQL adicional para Supabase (agregar a las tablas existentes):
+// create table if not exists bl_nominas (
+//   id uuid primary key default gen_random_uuid(),
+//   created_at timestamptz default now(),
+//   estilista_id text, estilista_nombre text,
+//   semana text, semana_str text,
+//   sueldo_base numeric, comision numeric, total numeric,
+//   metodo_pago text, notas text
+// );
+// alter table bl_nominas enable row level security;
+// create policy "open_all" on bl_nominas for all using (true) with check (true);
+// =============================================================
+// =============================================================
+/*
+create table if not exists bl_citas (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  fecha text, hora_inicio text, hora_fin text,
+  estilista_id text, cliente_id uuid,
+  cliente_nombre text, servicios text[], notas text, estado text default 'pendiente'
+);
+create table if not exists bl_clientes (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  nombre text, telefono text, email text, cumpleanos text, notas text
+);
+create table if not exists bl_ventas (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  estilista_id text, estilista_nombre text,
+  cliente_id uuid, cliente_nombre text,
+  items jsonb, subtotal numeric, descuento numeric default 0,
+  total numeric, metodo_pago text, comision numeric
+);
+create table if not exists bl_inventario (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  nombre text, categoria text, stock integer default 0,
+  minimo integer default 2, costo numeric, notas text
+);
+create table if not exists bl_egresos (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  concepto text, monto numeric, categoria text, fecha text
+);
+alter table bl_citas enable row level security;
+alter table bl_clientes enable row level security;
+alter table bl_ventas enable row level security;
+alter table bl_inventario enable row level security;
+alter table bl_egresos enable row level security;
+create policy "open_all" on bl_citas for all using (true) with check (true);
+create policy "open_all" on bl_clientes for all using (true) with check (true);
+create policy "open_all" on bl_ventas for all using (true) with check (true);
+create policy "open_all" on bl_inventario for all using (true) with check (true);
+create policy "open_all" on bl_egresos for all using (true) with check (true);
+*/
+</script>
+</body>
+</html>
