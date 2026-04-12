@@ -1032,6 +1032,7 @@ function saveProductoRapido(tipo){
   closeM();renderCart();
   toast(`${n} agregado ✓`,'ok');
 }
+async function addInvCart(invId,name,price){
   cart.push({id:'inv_'+invId+'_'+Date.now(),name,price,qty:1,invId});
   renderCart();
   toast(`${name} agregado ✓`,'ok');
