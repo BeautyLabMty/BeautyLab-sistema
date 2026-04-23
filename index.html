@@ -159,6 +159,38 @@ tbody tr:last-child td{border-bottom:none}
   cursor:pointer;border:1px dashed var(--border);border-radius:6px;
   transition:all var(--tr);margin-top:3px}
 .ag-add:hover{border-color:var(--gold);color:var(--gold);background:var(--gd)}
+/* CALENDAR VIEWS */
+.ag-view-btns{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:3px}
+.ag-vb{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;color:var(--g3);transition:all var(--tr);user-select:none;white-space:nowrap}
+.ag-vb:hover{color:var(--w)}
+.ag-vb.active{background:var(--gold);color:#060606}
+/* Week view */
+.wk-grid{display:grid;gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden}
+.wk-row{display:grid;background:var(--bg2);min-height:52px}
+.wk-day-hdr{padding:9px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;transition:background var(--tr)}
+.wk-day-hdr:hover{background:var(--gd)}
+.wk-day-hdr.today{border-left:3px solid var(--gold)}
+.wk-chips{padding:7px 10px;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start}
+/* Month view */
+.mo-cal{width:100%;border-collapse:collapse}
+.mo-cal th{padding:8px;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--g3);text-align:center;border-bottom:1px solid var(--border)}
+.mo-cell{border:1px solid var(--border);padding:6px;vertical-align:top;min-height:72px;cursor:pointer;transition:background var(--tr);background:var(--bg2)}
+.mo-cell:hover{background:var(--bg3)}
+.mo-cell.today{background:var(--gd);border-color:var(--gold)}
+.mo-cell.other{opacity:.35}
+.mo-cell.selected{border-color:var(--gold);background:var(--gd)}
+.mo-dn{font-size:11px;font-weight:600;margin-bottom:3px}
+.mo-dot{display:inline-flex;width:16px;height:16px;border-radius:50%;font-size:9px;align-items:center;justify-content:center;font-weight:700;color:#060606;margin:1px}
+/* Year view */
+.yr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.yr-month{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px;cursor:pointer;transition:all var(--tr)}
+.yr-month:hover{border-color:var(--gold)}
+.yr-mhdr{font-family:var(--fd);font-size:13px;font-weight:400;margin-bottom:8px;text-transform:capitalize}
+.yr-mini{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.yr-cell{text-align:center;font-size:8px;padding:2px 1px;border-radius:2px;color:var(--g3)}
+.yr-cell.has-cita{background:var(--gold);color:#060606;border-radius:3px;font-weight:700}
+.yr-cell.today-yr{outline:1px solid var(--gold);border-radius:3px}
+@media(max-width:768px){.yr-grid{grid-template-columns:repeat(2,1fr)}.ag-view-btns{flex-wrap:wrap}}
 
 /* POS */
 .pos-w{display:grid;grid-template-columns:1fr 290px;gap:12px}
@@ -473,6 +505,57 @@ function doLogout(){CU=null;sessionStorage.removeItem('bl_u');G('app').style.dis
 function showApp(){
   G('ls').style.display='none'; G('app').style.display='flex';
   buildSB(); navigate('dashboard');
+  setTimeout(checkBirthdays, 1500);
+}
+
+async function checkBirthdays(){
+  try{
+    const clis=await dbQ('bl_clientes');
+    const hoy=new Date();
+    const proximas=clis.filter(cl=>{
+      if(!cl.cumpleanos)return false;
+      const [,mesB,diaB]=cl.cumpleanos.split('-').map(Number);
+      if(!mesB||!diaB)return false;
+      const cumple=new Date(hoy.getFullYear(),mesB-1,diaB);
+      if(cumple<new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()))
+        cumple.setFullYear(hoy.getFullYear()+1);
+      const diff=Math.ceil((cumple-hoy)/(1000*60*60*24));
+      cl._diasRestantes=diff;
+      return diff>=0&&diff<=7;
+    }).sort((a,b)=>a._diasRestantes-b._diasRestantes);
+    if(!proximas.length)return;
+    const msg=proximas.length===1
+      ?`🎂 ${proximas[0].nombre} cumple en ${proximas[0]._diasRestantes===0?'HOY!':proximas[0]._diasRestantes+' día(s)'}`
+      :`🎂 ${proximas.length} clientas con cumpleaños esta semana`;
+    // Show persistent birthday banner
+    let banner=G('bday-banner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='bday-banner';
+      banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:800;background:linear-gradient(90deg,#C9A452,#E8C87A);color:#060606;padding:8px 16px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;cursor:pointer;';
+      banner.onclick=()=>showBirthdayDetail(proximas);
+      document.body.appendChild(banner);
+    }
+    banner.innerHTML=`<span>${msg}</span><span style="flex:1"></span><span style="font-size:10px;font-weight:400">Ver detalle →</span><span style="margin-left:8px;cursor:pointer;font-size:14px" onclick="event.stopPropagation();this.parentElement.remove()">✕</span>`;
+    // Adjust app top
+    G('app').style.paddingTop='36px';
+  }catch(e){}
+}
+
+function showBirthdayDetail(proximas){
+  openM(`
+    <div class="mt">🎂 Próximos Cumpleaños</div>
+    ${proximas.map(cl=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--gd);border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:18px">🎂</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${cl.nombre}</div>
+          <div style="font-size:10px;color:var(--g3)">${cl.telefono||'Sin teléfono'} · Cumpleaños: ${new Date(cl.cumpleanos+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long'})}</div>
+        </div>
+        <span class="bx ${cl._diasRestantes===0?'bg-gold':'bg-gray'}">${cl._diasRestantes===0?'🎉 HOY':cl._diasRestantes+' día(s)'}</span>
+        ${cl.telefono?`<a href="https://wa.me/52${cl.telefono.replace(/\D/g,'')}?text=${encodeURIComponent('¡Feliz cumpleaños '+cl.nombre+'! 🎂🌟 En Beauty Lab te deseamos un día increíble. ¡Ven a celebrar con nosotras! 💇‍♀️✨')}" target="_blank" class="btn bp bsm">WhatsApp</a>`:''}
+      </div>`).join('')}
+    <div class="ma"><button class="btn bg bsm" onclick="closeM()">Cerrar</button></div>`);
 }
 
 // =============================================================
@@ -635,23 +718,59 @@ function getSemana(d){
 // =============================================================
 // AGENDA
 // =============================================================
+// ─── AGENDA STATE ────────────────────────────────────────────
+let agView='dia'; // 'dia' | 'semana' | 'mes' | 'año'
+window._agCitas=[];
+
 async function pgAgenda(){
   G('tba').innerHTML=`
     <button class="btn bp bsm" onclick="openNuevaCita()">+ Nueva Cita</button>
     <button class="btn bg bsm" onclick="cpyBkLink()">🔗 Booking</button>`;
+  window._agCitas=await dbQ('bl_citas');
+  renderAgenda();
+}
+
+function renderAgenda(){
+  const views=['dia','semana','mes','año'];
+  const labels={'dia':'Día','semana':'Semana','mes':'Mes','año':'Año'};
+  const nav=`
+    <div class="ag-nav" style="flex-wrap:wrap;gap:7px">
+      <div class="ag-view-btns">
+        ${views.map(v=>`<div class="ag-vb ${agView===v?'active':''}" onclick="setAgView('${v}')">${labels[v]}</div>`).join('')}
+      </div>
+      <button class="btn bg bsm" onclick="agNavV(-1)">◀</button>
+      <div class="ag-dt" id="ag-titulo" style="font-size:14px;flex:none"></div>
+      <button class="btn bg bsm" onclick="agDate=new Date();renderAgenda()">Hoy</button>
+      <button class="btn bg bsm" onclick="agNavV(1)">▶</button>
+    </div>`;
+
+  if(agView==='dia')    renderVistaDia(nav);
+  else if(agView==='semana') renderVistaSemana(nav);
+  else if(agView==='mes')    renderVistaMes(nav);
+  else                       renderVistaAño(nav);
+}
+
+function setAgView(v){agView=v;renderAgenda();}
+function agNavV(d){
+  if(agView==='dia')     agDate.setDate(agDate.getDate()+d);
+  else if(agView==='semana') agDate.setDate(agDate.getDate()+d*7);
+  else if(agView==='mes')    agDate.setMonth(agDate.getMonth()+d);
+  else                       agDate.setFullYear(agDate.getFullYear()+d);
+  renderAgenda();
+}
+function agNav(d){agDate.setDate(agDate.getDate()+d);renderAgenda();}
+
+// ──────────────────────────────────────────────────────────────
+// VISTA DÍA
+// ──────────────────────────────────────────────────────────────
+function renderVistaDia(nav){
   const isA=CU.role==='admin';
   const cols=isA?STYLISTS:[CU];
-  const citas=await dbQ('bl_citas');
+  const citas=window._agCitas;
   const dC=citas.filter(ci=>ci.fecha===isoD(agDate));
   const ld=agDate.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-  G('ct').innerHTML=`
-    <div class="ag-nav">
-      <button class="btn bg bsm" onclick="agNav(-1)">◀</button>
-      <div class="ag-dt">${ld}</div>
-      <button class="btn bg bsm" onclick="agDate=new Date();pgAgenda()">Hoy</button>
-      <button class="btn bg bsm" onclick="agNav(1)">▶</button>
-    </div>
+  G('ct').innerHTML=nav+`
+    <div id="ag-titulo" style="font-family:var(--fd);font-size:14px;color:var(--g2);margin-bottom:10px;text-transform:capitalize">${ld}</div>
     <div class="ag-grid" style="grid-template-columns:repeat(${cols.length},1fr)">
       ${cols.map(s=>{
         const sc=dC.filter(ci=>ci.estilista_id===s.id).sort((a,b)=>(a.hora_inicio||'').localeCompare(b.hora_inicio||''));
@@ -662,19 +781,173 @@ async function pgAgenda(){
             <div style="font-size:9px;opacity:.5;margin-top:1px">${sc.length} cita(s)</div>
           </div>
           <div class="ag-slots">
-            ${sc.map(ci=>`
-              <div class="ag-slot" style="background:${s.color}15;border-color:${s.color}" onclick="verCita('${ci.id}')">
-                <div class="sl-t">${ci.hora_inicio||'?'} – ${ci.hora_fin||'?'}</div>
-                <div class="sl-n">${ci.cliente_nombre||'Sin nombre'}</div>
-                <div class="sl-s">${(ci.servicios||[]).slice(0,2).join(', ')||'—'}</div>
-                <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}" style="margin-top:3px;font-size:9px">${ci.estado||'pendiente'}</span>
-              </div>`).join('')}
+            ${sc.map(ci=>renderSlot(ci,s)).join('')}
             ${isA||CU.id===s.id?`<div class="ag-add" onclick="openNuevaCita('${s.id}')">+ agregar cita</div>`:''}
           </div>
         </div>`;}).join('')}
     </div>`;
 }
-function agNav(d){agDate.setDate(agDate.getDate()+d);pgAgenda();}
+
+// ──────────────────────────────────────────────────────────────
+// VISTA SEMANA
+// ──────────────────────────────────────────────────────────────
+function renderVistaSemana(nav){
+  const isA=CU.role==='admin';
+  const lunes=getLunes(agDate);
+  const dias=Array.from({length:7},(_,i)=>{const d=new Date(lunes);d.setDate(d.getDate()+i);return d;});
+  const semStr=getSemanaStr(lunes);
+  const citas=window._agCitas;
+  const diasSem=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const todayStr=isoD(new Date());
+
+  G('ct').innerHTML=nav+`
+    <div style="font-family:var(--fd);font-size:14px;color:var(--g2);margin-bottom:10px">${semStr}</div>
+    <div class="wk-grid">
+      ${dias.map((d,i)=>{
+        const dStr=isoD(d);
+        const dCitas=citas.filter(ci=>ci.fecha===dStr).sort((a,b)=>(a.hora_inicio||'').localeCompare(b.hora_inicio||''));
+        const esHoy=dStr===todayStr;
+        return`<div class="wk-row" style="grid-template-columns:90px 1fr">
+          <div class="wk-day-hdr${esHoy?' today':''}" onclick="agDate=new Date('${dStr}T12:00:00');agView='dia';renderAgenda()">
+            <div>
+              <div style="font-size:9px;color:var(--g3);letter-spacing:1px">${diasSem[i]}</div>
+              <div style="font-family:var(--fd);font-size:22px;color:${esHoy?'var(--gold)':'var(--w)'}">
+                ${d.getDate()}
+              </div>
+              <div style="font-size:9px;color:var(--g3)">${dCitas.length} cita(s)</div>
+            </div>
+          </div>
+          <div class="wk-chips">
+            ${dCitas.length?dCitas.map(ci=>{
+              const est=STAFF.find(s=>s.id===ci.estilista_id);
+              return`<div onclick="verCita('${ci.id}')" style="background:${est?.color||'#555'}22;border-left:3px solid ${est?.color||'#555'};border-radius:5px;padding:4px 8px;cursor:pointer;transition:opacity .15s;min-width:110px;max-width:180px" onmouseenter="this.style.opacity='.7'" onmouseleave="this.style.opacity='1'">
+                <div style="font-size:9px;color:${est?.color||'#fff'};font-weight:600">${ci.hora_inicio||'?'} ${est?.name||''}</div>
+                <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ci.cliente_nombre||'Sin nombre'}</div>
+                <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}" style="font-size:8px">${ci.estado||'pendiente'}</span>
+              </div>`;}).join('')
+            :`<div style="font-size:11px;color:var(--g3);padding:10px 4px">Sin citas</div>`}
+            ${isA?`<div onclick="agDate=new Date('${dStr}T12:00:00');openNuevaCita()" style="padding:4px 8px;border:1px dashed var(--border);border-radius:5px;cursor:pointer;font-size:10px;color:var(--g3);align-self:center;transition:all .15s" onmouseenter="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--g3)'">+</div>`:''}
+          </div>
+        </div>`;}).join('')}
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// VISTA MES
+// ──────────────────────────────────────────────────────────────
+function renderVistaMes(nav){
+  const citas=window._agCitas;
+  const yr=agDate.getFullYear(), mo=agDate.getMonth();
+  const mesLabel=new Date(yr,mo,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  const todayStr=isoD(new Date());
+  const selStr=isoD(agDate);
+
+  // Build calendar grid
+  const firstDay=new Date(yr,mo,1).getDay(); // 0=Dom
+  const startOffset=(firstDay===0)?6:firstDay-1; // make Mon=0
+  const daysInMonth=new Date(yr,mo+1,0).getDate();
+  const daysInPrev=new Date(yr,mo,0).getDate();
+  const cells=[];
+  // prev month padding
+  for(let i=startOffset-1;i>=0;i--) cells.push({d:new Date(yr,mo-1,daysInPrev-i),other:true});
+  // current month
+  for(let d=1;d<=daysInMonth;d++) cells.push({d:new Date(yr,mo,d),other:false});
+  // next month padding
+  while(cells.length%7!==0) cells.push({d:new Date(yr,mo+1,cells.length-daysInMonth-startOffset+1),other:true});
+
+  const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  G('ct').innerHTML=nav+`
+    <div style="font-family:var(--fd);font-size:14px;color:var(--g2);margin-bottom:10px;text-transform:capitalize">${mesLabel}</div>
+    <div class="card" style="padding:10px;overflow-x:auto">
+      <table class="mo-cal" style="min-width:560px">
+        <thead><tr>${dias.map(d=>`<th>${d}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${Array.from({length:cells.length/7},(_,ri)=>`<tr>${
+            cells.slice(ri*7,ri*7+7).map(({d,other})=>{
+              const dStr=isoD(d);
+              const dCitas=citas.filter(ci=>ci.fecha===dStr);
+              const esHoy=dStr===todayStr, esSel=dStr===selStr;
+              return`<td class="mo-cell${other?' other':''}${esHoy?' today':''}${esSel&&!esHoy?' selected':''}"
+                onclick="agDate=new Date('${dStr}T12:00:00');agView='dia';renderAgenda()">
+                <div class="mo-dn" style="color:${esHoy?'var(--gold)':other?'var(--g3)':'var(--g1)'}">${d.getDate()}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:2px">
+                  ${dCitas.slice(0,4).map(ci=>{
+                    const est=STAFF.find(s=>s.id===ci.estilista_id);
+                    return`<span class="mo-dot" style="background:${est?.color||'#555'}" title="${ci.cliente_nombre||''} · ${ci.hora_inicio||''}">${(ci.cliente_nombre||'?')[0]}</span>`;
+                  }).join('')}
+                  ${dCitas.length>4?`<span style="font-size:9px;color:var(--g3)">+${dCitas.length-4}</span>`:''}
+                </div>
+              </td>`;}).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+      ${STYLISTS.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g2)">
+        <div style="width:10px;height:10px;border-radius:50%;background:${s.color}"></div>${s.name}
+      </div>`).join('')}
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// VISTA AÑO
+// ──────────────────────────────────────────────────────────────
+function renderVistaAño(nav){
+  const citas=window._agCitas;
+  const yr=agDate.getFullYear();
+  const todayStr=isoD(new Date());
+
+  // Index citas by date
+  const byDate={};
+  citas.forEach(ci=>{byDate[ci.fecha]=(byDate[ci.fecha]||0)+1;});
+
+  const meses=Array.from({length:12},(_,m)=>m);
+  const diasSem=['L','M','M','J','V','S','D'];
+
+  G('ct').innerHTML=nav+`
+    <div style="font-family:var(--fd);font-size:18px;color:var(--g2);margin-bottom:14px">${yr}</div>
+    <div class="yr-grid">
+      ${meses.map(m=>{
+        const mesLabel=new Date(yr,m,1).toLocaleDateString('es-MX',{month:'long'});
+        const firstDay=new Date(yr,m,1).getDay();
+        const startOffset=(firstDay===0)?6:firstDay-1;
+        const daysInMonth=new Date(yr,m+1,0).getDate();
+        const daysInPrev=new Date(yr,m,0).getDate();
+        const cells2=[];
+        for(let i=startOffset-1;i>=0;i--) cells2.push({d:null,v:daysInPrev-i});
+        for(let d=1;d<=daysInMonth;d++) cells2.push({d:new Date(yr,m,d),v:d});
+        while(cells2.length%7!==0) cells2.push({d:null,v:null});
+        const hasCitas=cells2.filter(c=>c.d).some(c=>byDate[isoD(c.d)]);
+        return`<div class="yr-month${hasCitas?'':''}" onclick="agDate=new Date(${yr},${m},1);agView='mes';renderAgenda()">
+          <div class="yr-mhdr">${mesLabel}</div>
+          <div class="yr-mini">
+            ${diasSem.map(d=>`<div style="font-size:7px;color:var(--g3);text-align:center;padding-bottom:2px">${d}</div>`).join('')}
+            ${cells2.map(c=>{
+              if(!c.d)return`<div class="yr-cell"></div>`;
+              const ds=isoD(c.d);
+              const cnt=byDate[ds]||0;
+              const esHoy=ds===todayStr;
+              return`<div class="yr-cell${cnt?' has-cita':''}${esHoy?' today-yr':''}" title="${cnt?cnt+' cita(s)':''}">${c.v}</div>`;
+            }).join('')}
+          </div>
+          ${hasCitas?`<div style="font-size:9px;color:var(--gold);margin-top:6px">${Object.keys(byDate).filter(k=>k.startsWith(yr+'-'+(String(m+1).padStart(2,'0')))).reduce((s,k)=>s+(byDate[k]||0),0)} citas</div>`:'<div style="font-size:9px;color:var(--g3);margin-top:6px">Sin citas</div>'}
+        </div>`;}).join('')}
+    </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// HELPER: render single appointment slot
+// ──────────────────────────────────────────────────────────────
+function renderSlot(ci,s){
+  return`<div class="ag-slot" style="background:${s.color}15;border-color:${s.color}" onclick="verCita('${ci.id}')">
+    <div class="sl-t">${ci.hora_inicio||'?'} – ${ci.hora_fin||'?'}</div>
+    <div class="sl-n">${ci.cliente_nombre||'Sin nombre'}</div>
+    <div class="sl-s">${(ci.servicios||[]).slice(0,2).join(', ')||'—'}</div>
+    <span class="bx ${ci.estado==='completada'?'bg-green':ci.estado==='cancelada'?'bg-red':'bg-gray'}" style="margin-top:3px;font-size:9px">${ci.estado||'pendiente'}</span>
+  </div>`;
+}
+
 function cpyBkLink(){
   const u=location.origin+location.pathname+'?booking';
   navigator.clipboard.writeText(u).then(()=>toast('Link copiado ✓','ok'));
@@ -682,7 +955,8 @@ function cpyBkLink(){
 
 async function openNuevaCita(preEst=''){
   _cSvcs=[];
-  const clis=await dbQ('bl_clientes');
+  window._clisCita=await dbQ('bl_clientes');
+  window._cliSelId=''; window._cliSelNom='';
   openM(`
     <div class="mt">✦ Nueva Cita</div>
     <div class="fg"><label class="fl">Fecha</label><input class="fc" id="cf" type="date" value="${isoD(agDate)}"></div>
@@ -694,12 +968,16 @@ async function openNuevaCita(preEst=''){
       <select class="fc" id="ce">
         ${STYLISTS.map(s=>`<option value="${s.id}" ${s.id===preEst?'selected':''}>${s.name}</option>`).join('')}
       </select></div>
-    <div class="fg"><label class="fl">Clienta (base de datos)</label>
-      <select class="fc" id="ccl">
-        <option value="">— Nueva clienta —</option>
-        ${clis.map(cl=>`<option value="${cl.id}" data-n="${cl.nombre}">${cl.nombre}${cl.telefono?' · '+cl.telefono:''}</option>`).join('')}
-      </select></div>
-    <div class="fg"><label class="fl">Nombre si no está en lista</label><input class="fc" id="cnc" placeholder="Nombre completo"></div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Buscar Clienta 🔍</label>
+      <input class="fc" id="cli-search" placeholder="Escribe nombre o teléfono..." oninput="filtCliCita(this.value)" autocomplete="off">
+      <div id="cli-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--gb);border-radius:var(--r);max-height:160px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.6)"></div>
+      <div id="cli-sel-badge" style="margin-top:5px;display:none">
+        <span class="bx bg-gold" id="cli-sel-txt" style="font-size:11px"></span>
+        <span style="cursor:pointer;color:var(--g3);font-size:11px;margin-left:6px" onclick="clearCliSel()">✕ cambiar</span>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">O escribe nombre si no está registrada</label><input class="fc" id="cnc" placeholder="Nombre completo (nueva clienta)"></div>
     <div class="fg"><label class="fl">Buscar servicio</label>
       <input class="fc" id="csq" placeholder="Ej: corte, tinte..." oninput="filtCS(this.value)" style="margin-bottom:7px">
       <div class="chips" id="csr"></div>
@@ -712,6 +990,35 @@ async function openNuevaCita(preEst=''){
     </div>`);
   filtCS('');
 }
+
+function filtCliCita(q){
+  const dd=G('cli-dropdown');if(!dd)return;
+  if(!q){dd.style.display='none';return;}
+  const res=(window._clisCita||[]).filter(c=>
+    c.nombre?.toLowerCase().includes(q.toLowerCase())||c.telefono?.includes(q)
+  ).slice(0,8);
+  if(!res.length){dd.style.display='none';return;}
+  dd.style.display='block';
+  dd.innerHTML=res.map(c=>`
+    <div onclick="selCliCita('${c.id}','${c.nombre.replace(/'/g,"\\'")}',this)"
+      style="padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .12s"
+      onmouseenter="this.style.background='var(--gd)'" onmouseleave="this.style.background=''">
+      <span style="font-weight:500">${c.nombre}</span>
+      ${c.telefono?`<span style="font-size:10px;color:var(--g3);margin-left:6px">${c.telefono}</span>`:''}
+    </div>`).join('');
+}
+function selCliCita(id,nom){
+  window._cliSelId=id; window._cliSelNom=nom;
+  const s=G('cli-search');if(s)s.value='';
+  const dd=G('cli-dropdown');if(dd)dd.style.display='none';
+  const b=G('cli-sel-badge'),t=G('cli-sel-txt');
+  if(b&&t){b.style.display='block';t.textContent='✓ '+nom;}
+}
+function clearCliSel(){
+  window._cliSelId=''; window._cliSelNom='';
+  const b=G('cli-sel-badge');if(b)b.style.display='none';
+}
+
 
 function filtCS(q){
   const r=G('csr');if(!r)return;
@@ -727,7 +1034,8 @@ function togCS(name,el){
 
 async function saveCita(){
   const fecha=G('cf')?.value,hi=G('chi')?.value,hf=G('chf')?.value,estId=G('ce')?.value;
-  const cliId=G('ccl')?.value,cliNom=G('ccl')?.selectedOptions[0]?.dataset?.n||'';
+  const cliId=window._cliSelId||'';
+  const cliNom=window._cliSelNom||'';
   const nuevo=G('cnc')?.value?.trim(),notas=G('cn')?.value;
   if(!fecha||!estId){toast('Fecha y estilista requeridos','err');return;}
   let cid=cliId,cnm=cliNom||nuevo||'Sin nombre';
@@ -738,7 +1046,7 @@ async function saveCita(){
   const r=await dbI('bl_citas',{fecha,hora_inicio:hi,hora_fin:hf,estilista_id:estId,
     cliente_id:cid||null,cliente_nombre:cnm,servicios:_cSvcs,notas,estado:'pendiente',
     created_at:new Date().toISOString()});
-  _cSvcs=[];
+  _cSvcs=[]; window._cliSelId=''; window._cliSelNom='';
   if(r){toast('Cita guardada ✓','ok');closeM();pgAgenda();}
 }
 
@@ -756,12 +1064,72 @@ async function verCita(id){
     </div>
     ${(ci.servicios||[]).length?`<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--g3);margin-bottom:6px">Servicios</div><div class="chips">${(ci.servicios||[]).map(s=>`<span class="chip">${s}</span>`).join('')}</div></div>`:''}
     ${ci.notas?`<div style="font-size:12px;color:var(--g2);padding:9px;background:var(--bg3);border-radius:var(--r);margin-bottom:12px">${ci.notas}</div>`:''}
-    <div class="ma">
-      <button class="btn bd bsm" onclick="cancelarCita('${id}')">Cancelar cita</button>
-      ${ci.estado!=='completada'?`<button class="btn bg bsm" onclick="compCita('${id}','agenda')">✓ Completar</button>`:''}
-      <button class="btn bp bsm" onclick="irACaja('${ci.estilista_id}','${ci.cliente_id||''}','${(ci.cliente_nombre||'').replace(/'/g,"\\'")}')">Cobrar</button>
+    <div style="font-size:9px;color:var(--g3);margin-bottom:7px;text-transform:uppercase;letter-spacing:1px">Acciones</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <button class="btn bd bsm" onclick="cancelarCita('${id}')">✕ Cancelar cita</button>
+      ${ci.estado!=='completada'?`<button class="btn bg bsm" onclick="compCita('${id}','agenda')">✓ Completar</button>`:'<div></div>'}
+      <button class="btn bp bsm" onclick="irACaja('${ci.estilista_id}','${ci.cliente_id||''}','${(ci.cliente_nombre||'').replace(/'/g,"\\'")}')">💲 Cobrar</button>
+      <button class="btn bg bsm" onclick="editarCita('${id}')">✏️ Editar</button>
+      <button class="btn bd bsm" style="grid-column:span 2;background:rgba(240,96,96,.18)" onclick="eliminarCita('${id}')">🗑 Eliminar cita</button>
     </div>`);
 }
+
+async function editarCita(id){
+  const citas=await dbQ('bl_citas');
+  const ci=citas.find(c=>c.id===id);if(!ci)return;
+  window._clisCita=await dbQ('bl_clientes');
+  window._cliSelId=ci.cliente_id||''; window._cliSelNom=ci.cliente_nombre||'';
+  _cSvcs=[...(ci.servicios||[])];
+  openM(`
+    <div class="mt">✏️ Editar Cita</div>
+    <div class="fg"><label class="fl">Fecha</label><input class="fc" id="cf" type="date" value="${ci.fecha||''}"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Hora inicio</label><input class="fc" id="chi" type="time" value="${ci.hora_inicio||''}"></div>
+      <div class="fg"><label class="fl">Hora fin</label><input class="fc" id="chf" type="time" value="${ci.hora_fin||''}"></div>
+    </div>
+    <div class="fg"><label class="fl">Estilista</label>
+      <select class="fc" id="ce">
+        ${STYLISTS.map(s=>`<option value="${s.id}" ${s.id===ci.estilista_id?'selected':''}>${s.name}</option>`).join('')}
+      </select></div>
+    <div class="fg" style="position:relative">
+      <label class="fl">Buscar Clienta 🔍</label>
+      <input class="fc" id="cli-search" placeholder="Escribe nombre o teléfono..." oninput="filtCliCita(this.value)" autocomplete="off" value="">
+      <div id="cli-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--gb);border-radius:var(--r);max-height:160px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.6)"></div>
+      <div id="cli-sel-badge" style="margin-top:5px;${window._cliSelNom?'':'display:none'}">
+        <span class="bx bg-gold" id="cli-sel-txt" style="font-size:11px">✓ ${window._cliSelNom||''}</span>
+        <span style="cursor:pointer;color:var(--g3);font-size:11px;margin-left:6px" onclick="clearCliSel()">✕ cambiar</span>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Servicios seleccionados</label>
+      <input class="fc" id="csq" placeholder="Buscar servicio..." oninput="filtCS(this.value)" style="margin-bottom:7px">
+      <div class="chips" id="csr"></div>
+      <div class="chips" id="css" style="margin-top:5px">${_cSvcs.map(s=>`<span class="chip sel">${s}</span>`).join('')}</div>
+    </div>
+    <div class="fg"><label class="fl">Notas</label><input class="fc" id="cn" placeholder="Alergias, observaciones..." value="${ci.notas||''}"></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="updateCita('${id}')">Guardar Cambios</button>
+    </div>`);
+  filtCS('');
+}
+
+async function updateCita(id){
+  const fecha=G('cf')?.value,hi=G('chi')?.value,hf=G('chf')?.value,estId=G('ce')?.value;
+  const cliId=window._cliSelId||'', cliNom=window._cliSelNom||G('cnc')?.value?.trim()||'';
+  const notas=G('cn')?.value;
+  if(!fecha||!estId){toast('Fecha y estilista requeridos','err');return;}
+  const ok=await dbU('bl_citas',id,{fecha,hora_inicio:hi,hora_fin:hf,estilista_id:estId,
+    cliente_id:cliId||null,cliente_nombre:cliNom,servicios:_cSvcs,notas});
+  _cSvcs=[]; window._cliSelId=''; window._cliSelNom='';
+  if(ok){toast('Cita actualizada ✓','ok');closeM();pgAgenda();}
+}
+
+async function eliminarCita(id){
+  if(!confirm('¿Eliminar esta cita definitivamente? Esta acción no se puede deshacer.'))return;
+  await dbD('bl_citas',id);
+  toast('Cita eliminada','');closeM();pgAgenda();
+}
+
 
 async function compCita(id,src){
   await dbU('bl_citas',id,{estado:'completada'});
@@ -960,6 +1328,11 @@ async function pgCaja(){
             <label class="fl">Descuento ($)</label>
             <input class="fc" id="pdesc" type="number" min="0" value="0" oninput="renderCart()">
           </div>
+          <div class="fg">
+            <label class="fl">Propina ($) 🎁</label>
+            <input class="fc" id="pprop" type="number" min="0" value="0" oninput="renderCart()">
+          </div>
+          <div class="ct-row" id="cart-prop-row" style="display:none"><span class="ct-l" style="color:var(--green)">Propina</span><span id="cart-prop" style="color:var(--green);font-size:13px">$0</span></div>
           <div class="ct-row"><span class="ct-l" style="font-weight:600">Total</span><span class="ct-v" id="cart-tot">$0</span></div>
           <div class="fg" style="margin-bottom:10px">
             <label class="fl">Método de pago</label>
@@ -1119,8 +1492,12 @@ function qtyCart(id,d){
 function renderCart(){
   const sub=cart.reduce((s,i)=>s+(i.price*i.qty),0);
   const desc=parseFloat(G('pdesc')?.value)||0;
-  const tot=Math.max(0,sub-desc);
+  const prop=parseFloat(G('pprop')?.value)||0;
+  const tot=Math.max(0,sub-desc)+prop;
   const ci=G('cart-items'),cs=G('cart-sub'),ct=G('cart-tot');
+  const pr=G('cart-prop'),prr=G('cart-prop-row');
+  if(pr)pr.textContent=mxn(prop);
+  if(prr)prr.style.display=prop>0?'flex':'none';
   if(ci)ci.innerHTML=cart.length?cart.map(i=>`
     <div class="ci">
       <div class="ci-n" style="flex:1">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}</div>
@@ -1168,14 +1545,15 @@ async function cobrar(){
   if(!cart.length){toast('Agrega servicios al carrito','err');return;}
   if(!selEst){toast('Selecciona una estilista','err');return;}
   const desc=parseFloat(G('pdesc')?.value)||0;
+  const prop=parseFloat(G('pprop')?.value)||0;
   const sub=cart.reduce((s,i)=>s+(i.price*i.qty),0);
-  const tot=Math.max(0,sub-desc);
+  const tot=Math.max(0,sub-desc)+prop;
   const pago=G('ppago')?.value||'efectivo';
-  const comm=tot*selEst.comm;
+  const comm=(Math.max(0,sub-desc))*selEst.comm;
   const venta=await dbI('bl_ventas',{
     estilista_id:selEst.id,estilista_nombre:selEst.name,
     cliente_id:selCli?.id||null,cliente_nombre:selCli?.nombre||'Sin nombre',
-    items:cart,subtotal:sub,descuento:desc,total:tot,metodo_pago:pago,
+    items:cart,subtotal:sub,descuento:desc,propina:prop,total:tot,metodo_pago:pago,
     comision:comm,created_at:new Date().toISOString()
   });
   if(venta){
@@ -1201,6 +1579,7 @@ function showTicket(v){
       ${(v.items||[]).map(i=>`<div class="tr2"><span>${i.name}${i.qty>1?' x'+i.qty:''}</span><span>${mxn(i.price*i.qty)}</span></div>`).join('')}
     </div>
     ${v.descuento?`<div class="tr2" style="color:#888"><span>Descuento</span><span>-${mxn(v.descuento)}</span></div>`:''}
+    ${v.propina?`<div class="tr2" style="color:#27ae60"><span>Propina 🎁</span><span>+${mxn(v.propina)}</span></div>`:''}
     <div class="tr2 tot"><span>TOTAL</span><span>${mxn(v.total)}</span></div>
     <div style="margin-top:6px;font-size:9px;color:#888"><span>Pago: ${pMap[v.metodo_pago]||v.metodo_pago}</span></div>
     <div class="tf">¡Gracias por tu visita!<br>@mtybeautylab · @beautylabmty</div>`;
@@ -1213,27 +1592,40 @@ function newSale(){closeTk();renderCart();}
 // =============================================================
 // COMISIONES
 // =============================================================
+let commSemana=getLunes(new Date());
+
 async function pgComm(){
   const isA=CU.role==='admin';
-  if(isA){
-    G('tba').innerHTML=`
-      <select class="fc" id="comm-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgComm()">
-        ${Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
-          const v=d.toISOString().slice(0,7);
-          return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('')}
-      </select>`;
-  }
-  const mes=(G('comm-mes')?.value||new Date().toISOString().slice(0,7));
+  const lunes=commSemana;
+  const dom=new Date(lunes);dom.setDate(dom.getDate()+6);
+  const semStr=getSemanaStr(lunes);
+  const esEstaSemana=isoSemana(lunes)===isoSemana(getLunes(new Date()));
+
+  G('tba').innerHTML=`
+    <div style="display:flex;align-items:center;gap:7px">
+      <button class="btn bg bsm" onclick="commNav(-7)">◀</button>
+      <span style="font-size:11px;color:var(--g2)">${semStr}</span>
+      <button class="btn bg bsm" onclick="commNav(7)" ${esEstaSemana?'disabled':''}>▶</button>
+      <button class="btn bg bsm" onclick="commSemana=getLunes(new Date());pgComm()">Esta semana</button>
+    </div>`;
+
   const ventas=await dbQ('bl_ventas');
-  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const vSem=ventas.filter(v=>{
+    const d=new Date(v.created_at);
+    return d>=lunes&&d<=dom;
+  });
   const estList=isA?STYLISTS:[CU];
+
+  // Buscar citas para cruzar hora_inicio
+  const citas=await dbQ('bl_citas');
 
   G('ct').innerHTML=`
     <div style="margin-bottom:14px">
-      ${isA?`<div style="font-size:11px;color:var(--g3)">${new Date(mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</div>`:''}
+      <div style="font-family:var(--fd);font-size:16px">Comisiones · <span style="color:var(--gold)">${semStr}</span></div>
+      <div style="font-size:10px;color:var(--g3);margin-top:2px">Se reinicia cada lunes • Semana ${esEstaSemana?'actual':'pasada'}</div>
     </div>
     ${estList.map(s=>{
-      const sv=vM.filter(v=>v.estilista_id===s.id);
+      const sv=vSem.filter(v=>v.estilista_id===s.id);
       const totV=sv.reduce((a,v)=>a+(v.total||0),0);
       const totC=sv.reduce((a,v)=>a+(v.comision||0),0);
       const nSvcs=sv.reduce((a,v)=>a+(v.items?.length||0),0);
@@ -1251,20 +1643,32 @@ async function pgComm(){
           <div><div style="font-size:9px;color:var(--g3)">Comisión</div><div style="font-family:var(--fd);font-size:20px;color:var(--green)">${mxn(totC)}</div></div>
           <div><div style="font-size:9px;color:var(--g3)">Servicios</div><div style="font-family:var(--fd);font-size:20px">${nSvcs}</div></div>
         </div>
-        ${sv.length?`<div style="font-size:9px;color:var(--g3);margin-bottom:6px">Últimas ventas</div>
+        ${sv.length?`<div style="font-size:9px;color:var(--g3);margin-bottom:6px">Ventas esta semana</div>
         <div class="tw"><table>
-          <thead><tr><th>Fecha</th><th>Clienta</th><th>Total</th><th>Comisión</th><th>Pago</th></tr></thead>
-          <tbody>${sv.slice(0,6).map(v=>`<tr>
-            <td style="font-size:11px">${new Date(v.created_at).toLocaleDateString('es-MX')}</td>
-            <td>${v.cliente_nombre||'—'}</td>
-            <td style="color:var(--gold)">${mxn(v.total)}</td>
-            <td style="color:var(--green)">${mxn(v.comision)}</td>
-            <td><span class="bx bg-gray" style="font-size:9px">${v.metodo_pago||'—'}</span></td>
-          </tr>`).join('')}</tbody>
+          <thead><tr><th>Fecha · Hora</th><th>Clienta</th><th>Total</th><th>Comisión</th><th>Pago</th></tr></thead>
+          <tbody>${sv.map(v=>{
+            const fechaVenta=new Date(v.created_at).toLocaleDateString('es-MX');
+            const horaVenta=new Date(v.created_at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+            // buscar cita relacionada para obtener hora_inicio de la cita
+            const citaRel=citas.find(c=>c.cliente_id===v.cliente_id&&c.fecha===isoD(v.created_at)&&c.estilista_id===v.estilista_id);
+            const horaLabel=citaRel?.hora_inicio?`<span style="color:var(--gold);font-weight:600">${citaRel.hora_inicio}</span> · ${fechaVenta}`:`${fechaVenta} <span style="color:var(--g3);font-size:9px">${horaVenta}</span>`;
+            return`<tr>
+              <td style="font-size:11px">${horaLabel}</td>
+              <td>${v.cliente_nombre||'—'}</td>
+              <td style="color:var(--gold)">${mxn(v.total)}</td>
+              <td style="color:var(--green)">${mxn(v.comision)}</td>
+              <td><span class="bx bg-gray" style="font-size:9px">${v.metodo_pago||'—'}</span></td>
+            </tr>`;}).join('')}</tbody>
         </table></div>`
-        :'<div class="empty" style="padding:12px"><div class="et">Sin ventas este mes</div></div>'}
+        :'<div class="empty" style="padding:12px"><div class="et">Sin ventas esta semana — comisión en $0</div></div>'}
       </div>`;}).join('')}`;
 }
+
+function commNav(dias){
+  commSemana=getLunes(new Date(commSemana.getTime()+dias*24*60*60*1000));
+  pgComm();
+}
+
 
 // =============================================================
 // CATÁLOGO (admin only)
@@ -1348,32 +1752,63 @@ function openNewPaq(){
 async function pgInv(){
   G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewProd()">+ Producto</button>`;
   const prods=await dbQ('bl_inventario');
+  const servicio=prods.filter(p=>p.tipo_inv==='servicio'||(!p.tipo_inv&&!['Joyería','Productos Pelo'].includes(p.categoria)));
+  const venta=prods.filter(p=>p.tipo_inv==='venta'||(!p.tipo_inv&&['Joyería','Productos Pelo'].includes(p.categoria)));
+
+  function renderInvTable(list,tipo){
+    if(!list.length)return`<div class="empty"><div class="ei">📦</div><div class="et">Sin productos registrados</div></div>`;
+    return`<div class="tw"><table>
+      <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th>${tipo==='venta'?'<th>Precio Venta</th>':''}<th>Alerta</th><th></th></tr></thead>
+      <tbody>${list.map(p=>{
+        const low=p.stock<=p.minimo;
+        return`<tr>
+          <td><strong>${p.nombre}</strong></td>
+          <td style="font-size:11px">${p.categoria||'—'}</td>
+          <td style="font-family:var(--fd);font-size:18px;color:${low?'var(--red)':'var(--gold)'}">${p.stock}</td>
+          <td style="font-size:11px;color:var(--g3)">${p.minimo||0}</td>
+          <td style="font-size:12px">${p.costo?mxn(p.costo):'—'}</td>
+          ${tipo==='venta'?`<td style="font-size:12px;color:var(--gold)">${p.precio_venta?mxn(p.precio_venta):'—'}</td>`:''}
+          <td>${low?`<span class="bx bg-red">⚠ Bajo</span>`:`<span class="bx bg-green">OK</span>`}</td>
+          <td style="display:flex;gap:5px">
+            <button class="btn bg bsm" onclick="ajustarStock('${p.id}',${p.stock})">Ajustar</button>
+          </td>
+        </tr>`;}).join('')}</tbody>
+    </table></div>`;
+  }
+
   G('ct').innerHTML=`
-    <div class="card">
-      <div class="ct2">Inventario de Productos</div>
-      ${prods.length?`<div class="tw"><table>
-        <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio Venta</th><th>Alerta</th><th></th></tr></thead>
-        <tbody>${prods.map(p=>{
-          const low=p.stock<=p.minimo;
-          return`<tr>
-            <td><strong>${p.nombre}</strong></td>
-            <td style="font-size:11px">${p.categoria||'—'}</td>
-            <td style="font-family:var(--fd);font-size:18px;color:${low?'var(--red)':'var(--gold)'}">${p.stock}</td>
-            <td style="font-size:11px;color:var(--g3)">${p.minimo||0}</td>
-            <td style="font-size:12px">${p.costo?mxn(p.costo):'—'}</td>
-            <td style="font-size:12px;color:var(--gold)">${p.precio_venta?mxn(p.precio_venta):'—'}</td>
-            <td>${low?`<span class="bx bg-red">⚠ Bajo</span>`:`<span class="bx bg-green">OK</span>`}</td>
-            <td style="display:flex;gap:5px">
-              <button class="btn bg bsm" onclick="ajustarStock('${p.id}',${p.stock})">Ajustar</button>
-            </td>
-          </tr>`;}).join('')}</tbody>
-      </table></div>`
-      :'<div class="empty"><div class="ei">📦</div><div class="et">Sin productos registrados</div></div>'}
+    <div class="tabs">
+      <div class="tab active" onclick="invTab(this,'inv-serv')">🧴 Productos de Servicio</div>
+      <div class="tab" onclick="invTab(this,'inv-venta')">🛍 Productos de Venta</div>
+    </div>
+    <div id="inv-serv">
+      <div class="card">
+        <div style="font-size:11px;color:var(--g3);margin-bottom:10px">Insumos usados para dar servicios (tintes, shampoos, tratamientos, herramientas). No aparecen en la caja para venta.</div>
+        ${renderInvTable(servicio,'servicio')}
+      </div>
+    </div>
+    <div id="inv-venta" style="display:none">
+      <div class="card">
+        <div style="font-size:11px;color:var(--g3);margin-bottom:10px">Productos que se venden al cliente (joyería, productos para el hogar). Aparecen en la Caja para cobro.</div>
+        ${renderInvTable(venta,'venta')}
+      </div>
     </div>`;
 }
+
+function invTab(el,id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['inv-serv','inv-venta'].forEach(x=>{const d=G(x);if(d)d.style.display=x===id?'block':'none';});
+}
+
 function openNewProd(){
   openM(`
     <div class="mt">✦ Nuevo Producto</div>
+    <div class="fg"><label class="fl">Tipo de inventario *</label>
+      <select class="fc" id="np-tipo" onchange="toggleTipoProd(this.value)">
+        <option value="servicio">🧴 Producto de Servicio (insumos internos)</option>
+        <option value="venta">🛍 Producto de Venta (se vende al cliente)</option>
+      </select></div>
     <div class="fg"><label class="fl">Nombre *</label><input class="fc" id="np-n" placeholder="Ej: Shampoo Alfaparf"></div>
     <div class="fr">
       <div class="fg"><label class="fl">Categoría</label>
@@ -1383,7 +1818,7 @@ function openNewProd(){
           <option>Herramientas</option><option>Uñas</option>
           <option>Maquillaje</option>
           <option>Joyería</option>
-          <option>Productos Pelo</option>
+          <option>Accesorios</option>
           <option>Otro</option>
         </select></div>
       <div class="fg"><label class="fl">Stock actual</label><input class="fc" id="np-s" type="number" min="0" value="0"></div>
@@ -1392,21 +1827,29 @@ function openNewProd(){
       <div class="fg"><label class="fl">Stock mínimo (alerta)</label><input class="fc" id="np-m" type="number" min="0" value="2"></div>
       <div class="fg"><label class="fl">Costo unitario ($)</label><input class="fc" id="np-p" type="number" min="0"></div>
     </div>
-    <div class="fg"><label class="fl">Precio de venta ($) <span style="color:var(--gold)">— aparece en Caja</span></label>
-      <input class="fc" id="np-pv" type="number" min="0" placeholder="0 = no aparece en Caja"></div>
+    <div class="fg" id="np-pv-wrap">
+      <label class="fl">Precio de venta ($) <span style="color:var(--gold)">— aparece en Caja</span></label>
+      <input class="fc" id="np-pv" type="number" min="0" placeholder="0 = no aparece en Caja">
+    </div>
     <div class="fg"><label class="fl">Notas</label><input class="fc" id="np-no" placeholder="Proveedor, referencia..."></div>
     <div class="ma">
       <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
       <button class="btn bp bsm" onclick="saveProd()">Guardar</button>
     </div>`);
+  toggleTipoProd('servicio');
+}
+function toggleTipoProd(v){
+  const w=G('np-pv-wrap');if(w)w.style.display=v==='venta'?'block':'none';
 }
 async function saveProd(){
   const n=G('np-n')?.value?.trim();
   if(!n){toast('Nombre requerido','err');return;}
+  const tipo=G('np-tipo')?.value||'servicio';
   const r=await dbI('bl_inventario',{nombre:n,categoria:G('np-c')?.value,
+    tipo_inv:tipo,
     stock:parseInt(G('np-s')?.value)||0,minimo:parseInt(G('np-m')?.value)||2,
     costo:parseFloat(G('np-p')?.value)||0,
-    precio_venta:parseFloat(G('np-pv')?.value)||0,
+    precio_venta:tipo==='venta'?(parseFloat(G('np-pv')?.value)||0):0,
     notas:G('np-no')?.value,created_at:new Date().toISOString()});
   if(r){toast('Producto guardado ✓','ok');closeM();pgInv();}
 }
@@ -1428,6 +1871,7 @@ async function doAjusteStock(id){
   await dbU('bl_inventario',id,{stock:v});
   toast('Stock actualizado ✓','ok');closeM();pgInv();
 }
+
 
 // =============================================================
 // FINANZAS (admin only)
