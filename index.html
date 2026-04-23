@@ -10,36 +10,58 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
+/* ── DARK MODE (default) ── */
 :root{
   --bg:#060606;--bg2:#0f0f0f;--bg3:#181818;
   --gold:#C9A452;--gold2:#E8C87A;--gd:rgba(201,164,82,0.12);--gb:rgba(201,164,82,0.22);
   --w:#fff;--g1:#e8e8e8;--g2:#b0b0b0;--g3:#777;
-  --border:#2a2a2a;--red:#f06060;--green:#5EE087;--blue:#64b5ff;
+  --border:#2a2a2a;--red:#f06060;--green:#4cd97b;--blue:#64b5ff;
+  --shadow:0 4px 24px rgba(0,0,0,.7);
   --fd:'Cormorant Garamond',Georgia,serif;--fb:'Outfit',sans-serif;
   --r:10px;--sw:220px;--tr:.16s ease;
+  --cs:dark;
 }
-html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);overflow:hidden;color-scheme:dark}
+
+/* ── LIGHT MODE ── */
+[data-theme="light"]{
+  --bg:#f0ede8;--bg2:#faf9f7;--bg3:#edeae4;
+  --gold:#9a7830;--gold2:#b8922a;--gd:rgba(154,120,48,0.10);--gb:rgba(154,120,48,0.25);
+  --w:#1a1410;--g1:#2d2520;--g2:#5a5048;--g3:#8a7f75;
+  --border:#d8d0c4;--red:#c0392b;--green:#27ae60;--blue:#2980b9;
+  --shadow:0 4px 24px rgba(0,0,0,.12);
+  --cs:light;
+}
+html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);overflow:hidden;color-scheme:var(--cs,dark);transition:background .25s,color .25s}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-/* Iconos de inputs en blanco */
+/* Iconos de inputs según tema */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator{
-  filter:invert(1) brightness(1.8) !important;
-  opacity:1 !important;
-  cursor:pointer;
-  padding:2px;
+  cursor:pointer;padding:2px;opacity:.8;
 }
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"]{color-scheme:dark}
-select.fc{color-scheme:dark}
-/* Labels y textos secundarios más visibles */
+:root input[type="date"]::-webkit-calendar-picker-indicator,
+:root input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.6)}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator{filter:none}
+input[type="date"],input[type="time"],input[type="datetime-local"]{color-scheme:var(--cs,dark)}
+select.fc{color-scheme:var(--cs,dark)}
+
+/* Transición suave en elementos clave */
+.card,.sb,.main,.tb,.fc,.mox,.kp,.ag-col,.wk-row,.mo-cell,.tck{transition:background .25s,border-color .25s,color .25s}
+
+/* Labels y tabla */
 .fl{color:var(--g1)!important}
 tbody td{color:var(--g1)}
 thead th{color:var(--g2)}
+
+/* Light mode: ticket en dark para contraste */
+[data-theme="light"] .tck{background:#1a1410!important;color:#f0ede8!important}
+[data-theme="light"] .th-s,[data-theme="light"] .tf{color:#9a8878!important}
+[data-theme="light"] .tr2.tot{border-color:#3a3028!important}
 
 /* LOGIN */
 #ls{display:flex;align-items:center;justify-content:center;height:100vh;
@@ -333,6 +355,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="sb-u">
       <div class="sb-av" id="sbav"></div>
       <div class="sb-ui"><div class="sb-un" id="sbun"></div><div class="sb-ur" id="sbur"></div></div>
+      <span id="theme-btn" onclick="toggleTheme()" title="Cambiar tema" style="font-size:16px;cursor:pointer;color:var(--g3);transition:color var(--tr);padding:3px;margin-right:2px" onmouseenter="this.style.color='var(--gold)'" onmouseleave="this.style.color='var(--g3)'">◑</span>
       <span class="sb-out" onclick="doLogout()" title="Salir">⏏</span>
     </div>
   </aside>
@@ -616,6 +639,27 @@ function navigate(p){
     cumpleanos:pgCumpleanos})[p]?.();
 }
 function toggleSB(){SBO=!SBO;G('sb').classList.toggle('open',SBO);}
+
+// ── THEME ──────────────────────────────────────────────────
+function toggleTheme(){
+  const isLight=document.documentElement.dataset.theme==='light';
+  setTheme(isLight?'dark':'light');
+}
+function setTheme(t){
+  document.documentElement.dataset.theme=t==='light'?'light':'';
+  localStorage.setItem('bl_theme',t);
+  const btn=G('theme-btn');
+  if(btn)btn.textContent=t==='light'?'☀':'◑';
+  // update meta color-scheme
+  const meta=document.querySelector('meta[name="color-scheme"]');
+  if(meta)meta.content=t==='light'?'light':'dark';
+}
+// Aplicar tema guardado al iniciar
+(function initTheme(){
+  const saved=localStorage.getItem('bl_theme')||'dark';
+  setTheme(saved);
+})();
+
 
 function toast(msg,t=''){
   const el=G('toast'); el.textContent=msg;
