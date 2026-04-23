@@ -567,6 +567,7 @@ function buildSB(){
     {p:'dashboard',i:'◈',l:'Dashboard'},
     {p:'agenda',   i:'◫',l:'Agenda'},
     {p:'clientes', i:'◎',l:'Clientes'},
+    {p:'cumpleanos',i:'🎂',l:'Cumpleaños'},
     {p:'comisiones',i:'◐',l:'Comisiones'},
     ...(isA?[
       {p:'caja',      i:'◉',l:'Caja · Cobro'},
@@ -587,12 +588,13 @@ function navigate(p){
   document.querySelectorAll('.ni').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
   const T={dashboard:'Dashboard',agenda:'Agenda',clientes:'Clientes',caja:'Caja · Cobro',
     comisiones:'Comisiones',catalogo:'Catálogo',inventario:'Inventario',finanzas:'Finanzas',
-    nomina:'Nómina Semanal',reportes:'Reportes'};
+    nomina:'Nómina Semanal',reportes:'Reportes',cumpleanos:'🎂 Cumpleaños'};
   G('tbt').textContent=T[p]||p; G('tba').innerHTML='';
   G('ct').innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
   if(window.innerWidth<=768){G('sb').classList.remove('open');SBO=false;}
   ({dashboard:pgDash,agenda:pgAgenda,clientes:pgCli,caja:pgCaja,comisiones:pgComm,
-    catalogo:pgCat,inventario:pgInv,finanzas:pgFin,nomina:pgNomina,reportes:pgRep})[p]?.();
+    catalogo:pgCat,inventario:pgInv,finanzas:pgFin,nomina:pgNomina,reportes:pgRep,
+    cumpleanos:pgCumpleanos})[p]?.();
 }
 function toggleSB(){SBO=!SBO;G('sb').classList.toggle('open',SBO);}
 
@@ -1278,6 +1280,150 @@ async function verCli(id){
         <div style="font-size:10px;color:var(--g3)">${(ci.servicios||[]).join(', ')||'—'}</div>
       </div>`).join('')||'<div style="color:var(--g3);font-size:12px">Sin visitas registradas</div>'}
     <div class="ma"><button class="btn bg bsm" onclick="closeM()">Cerrar</button></div>`);
+}
+
+// =============================================================
+// CUMPLEAÑOS
+// =============================================================
+let bday_mes=new Date().getMonth(); // 0-11
+let bday_año=new Date().getFullYear();
+
+async function pgCumpleanos(){
+  G('tba').innerHTML='';
+  const clis=await dbQ('bl_clientes');
+  renderCumpleanos(clis);
+}
+
+function renderCumpleanos(clis){
+  const hoy=new Date();
+  const todayMD=`${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  const mesNombre=new Date(bday_año,bday_mes,1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  const esMesActual=bday_mes===hoy.getMonth()&&bday_año===hoy.getFullYear();
+
+  // Filtrar clientas con cumpleaños en el mes seleccionado
+  const delMes=clis.filter(cl=>{
+    if(!cl.cumpleanos)return false;
+    const p=cl.cumpleanos.split('-');
+    if(p.length<2)return false;
+    return parseInt(p[1])===bday_mes+1;
+  }).map(cl=>{
+    const p=cl.cumpleanos.split('-');
+    const dia=parseInt(p[2]||0);
+    const md=`${String(bday_mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    const esHoy=esMesActual&&md===todayMD;
+    // días restantes (solo si mes actual)
+    let diasR=null;
+    if(esMesActual){
+      const cumple=new Date(hoy.getFullYear(),bday_mes,dia);
+      diasR=Math.ceil((cumple-new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()))/(1000*60*60*24));
+    }
+    return{...cl,dia,md,esHoy,diasR};
+  }).sort((a,b)=>a.dia-b.dia);
+
+  // Clientas sin cumpleaños registrado
+  const sinFecha=clis.filter(cl=>!cl.cumpleanos).length;
+
+  // Stats generales de todos los meses
+  const conFecha=clis.filter(cl=>cl.cumpleanos);
+  const porMes=Array.from({length:12},(_,m)=>({
+    m, n:conFecha.filter(cl=>parseInt((cl.cumpleanos||'').split('-')[1])===m+1).length
+  }));
+  const mesConMas=porMes.reduce((a,b)=>b.n>a.n?b:a,porMes[0]);
+  const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  G('ct').innerHTML=`
+    <!-- NAV MES -->
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn bg bsm" onclick="bdayNav(-1)">◀</button>
+      <div style="font-family:var(--fd);font-size:20px;flex:1;text-transform:capitalize">${mesNombre}</div>
+      <button class="btn bg bsm" onclick="bdayNav(1)">▶</button>
+      <button class="btn bg bsm" onclick="bday_mes=new Date().getMonth();bday_año=new Date().getFullYear();pgCumpleanos()">Mes Actual</button>
+    </div>
+
+    <!-- MINI BARRA AÑO -->
+    <div style="display:flex;gap:3px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
+      ${porMes.map(({m,n})=>`
+        <div onclick="bday_mes=${m};bday_año=new Date().getFullYear();renderCumpleanosPage()" 
+          style="flex:1;min-width:38px;text-align:center;cursor:pointer;border-radius:6px;padding:7px 4px;
+          background:${m===bday_mes?'var(--gold)':n>0?'var(--gd)':'var(--bg2)'};
+          border:1px solid ${m===bday_mes?'var(--gold)':'var(--border)'};transition:all .15s"
+          onmouseenter="this.style.borderColor='var(--gold)'" onmouseleave="this.style.borderColor='${m===bday_mes?'var(--gold)':'var(--border)'}'">
+          <div style="font-size:9px;color:${m===bday_mes?'#060606':'var(--g3)'};font-weight:600">${MESES[m]}</div>
+          <div style="font-family:var(--fd);font-size:16px;color:${m===bday_mes?'#060606':n>0?'var(--gold)':'var(--g3)'}">${n||'·'}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- KPIs -->
+    <div class="kg" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      <div class="kp"><div class="kl">Este Mes</div><div class="kv">${delMes.length}</div><div class="ks">cumpleañeras</div></div>
+      <div class="kp"><div class="kl">Mes con Más</div><div class="kv">${mesConMas.n}</div><div class="ks">${MESES[mesConMas.m]}</div></div>
+      <div class="kp"><div class="kl">Sin Fecha</div><div class="kv" style="color:var(--red)">${sinFecha}</div><div class="ks">sin registrar</div></div>
+    </div>
+
+    <!-- LISTA -->
+    <div class="card">
+      <div class="ct2" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Clientas de ${new Date(bday_año,bday_mes,1).toLocaleDateString('es-MX',{month:'long'})}</span>
+        ${delMes.length?`<span style="font-size:10px;color:var(--g3)">${delMes.length} clienta(s)</span>`:''}
+      </div>
+      ${delMes.length?delMes.map(cl=>{
+        const diasLabel=cl.diasR===null?''
+          :cl.esHoy?'🎉 ¡HOY!'
+          :cl.diasR<0?`hace ${Math.abs(cl.diasR)} días`
+          :cl.diasR===0?'🎉 ¡HOY!'
+          :`en ${cl.diasR} día(s)`;
+        const urgente=cl.diasR!==null&&cl.diasR>=0&&cl.diasR<=3;
+        return`<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);${urgente?'background:var(--gd);margin:0 -16px;padding:12px 16px;':''}">
+          <!-- Avatar día -->
+          <div style="width:46px;height:46px;border-radius:10px;background:${cl.esHoy?'var(--gold)':'var(--bg3)'};border:2px solid ${cl.esHoy?'var(--gold)':'var(--border)'};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="font-size:8px;color:${cl.esHoy?'#060606':'var(--g3)'};text-transform:uppercase;letter-spacing:1px">${MESES[bday_mes]}</div>
+            <div style="font-family:var(--fd);font-size:20px;font-weight:600;color:${cl.esHoy?'#060606':'var(--gold)'};line-height:1">${cl.dia}</div>
+          </div>
+          <!-- Info -->
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cl.nombre}</div>
+            <div style="font-size:10px;color:var(--g3);margin-top:2px">${cl.telefono||'Sin teléfono'}${cl.email?' · '+cl.email:''}</div>
+            ${diasLabel?`<div style="font-size:10px;color:${cl.esHoy||cl.diasR===0?'var(--gold)':urgente?'var(--gold)':'var(--g2)'};font-weight:${urgente?'600':'400'};margin-top:2px">${diasLabel}</div>`:''}
+          </div>
+          <!-- Acciones -->
+          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+            ${cl.telefono?`<a href="https://wa.me/52${cl.telefono.replace(/\D/g,'').slice(-10)}?text=${encodeURIComponent('¡Feliz cumpleaños '+cl.nombre+'! 🎂🌟\nEn Beauty Lab te deseamos un día increíble. ¡Ven a celebrar con nosotras y recibe un descuento especial! 💇‍♀️✨')}" target="_blank" class="btn bp bsm" style="font-size:10px">💬 WA</a>`:''}
+            <button class="btn bg bsm" style="font-size:10px" onclick="editCli('${cl.id}')">✏️ Edit</button>
+          </div>
+        </div>`;}).join('')
+      :`<div class="empty">
+          <div class="ei">🎂</div>
+          <div class="et">No hay clientas con cumpleaños en ${new Date(bday_año,bday_mes,1).toLocaleDateString('es-MX',{month:'long'})}</div>
+          <div style="font-size:10px;color:var(--g3);margin-top:6px">Registra las fechas en el perfil de cada clienta</div>
+        </div>`}
+    </div>
+
+    <!-- CLIENTAS SIN FECHA (colapsable) -->
+    ${sinFecha>0?`
+    <div class="card" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div class="ct2" style="margin:0;border:0;padding:0">⚠️ Sin fecha de cumpleaños <span class="bx bg-red" style="margin-left:6px">${sinFecha}</span></div>
+        <span style="font-size:10px;color:var(--g3)">ver / ocultar</span>
+      </div>
+      <div style="display:none;margin-top:12px">
+        ${clis.filter(cl=>!cl.cumpleanos).map(cl=>`
+          <div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1;font-size:12px">${cl.nombre} <span style="font-size:10px;color:var(--g3)">${cl.telefono||''}</span></div>
+            <button class="btn bp bsm" style="font-size:10px" onclick="editCli('${cl.id}')">+ Agregar fecha</button>
+          </div>`).join('')}
+      </div>
+    </div>`:''}`;
+}
+
+function bdayNav(d){
+  bday_mes+=d;
+  if(bday_mes>11){bday_mes=0;bday_año++;}
+  if(bday_mes<0){bday_mes=11;bday_año--;}
+  pgCumpleanos();
+}
+
+function renderCumpleanosPage(){
+  pgCumpleanos();
 }
 
 // =============================================================
