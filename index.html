@@ -2204,7 +2204,9 @@ function openNewPaq(){
 // INVENTARIO
 // =============================================================
 async function pgInv(){
-  G('tba').innerHTML=`<button class="btn bp bsm" onclick="openNewProd()">+ Producto</button>`;
+  G('tba').innerHTML=`
+    <button class="btn bg bsm" onclick="reporteFaltantesPDF()">📄 PDF Faltantes</button>
+    <button class="btn bp bsm" onclick="openNewProd()">+ Producto</button>`;
   const prods=await dbQ('bl_inventario');
   const servicio=prods.filter(p=>p.tipo_inv==='servicio'||(!p.tipo_inv&&!['Joyería','Productos Pelo'].includes(p.categoria)));
   const venta=prods.filter(p=>p.tipo_inv==='venta'||(!p.tipo_inv&&['Joyería','Productos Pelo'].includes(p.categoria)));
@@ -2326,10 +2328,175 @@ async function doAjusteStock(id){
   toast('Stock actualizado ✓','ok');closeM();pgInv();
 }
 
+// =============================================================
+// REPORTE PDF — FALTANTES DE INVENTARIO
+// =============================================================
+async function reporteFaltantesPDF(){
+  const prods=await dbQ('bl_inventario');
+  const faltantes=prods.filter(p=>(p.stock||0)<=(p.minimo||0)).sort((a,b)=>{
+    // Ordenar: primero los de stock 0, luego por déficit mayor
+    const da=(p.minimo||0)-(p.stock||0);
+    const db=(b.minimo||0)-(b.stock||0);
+    if((a.stock||0)===0&&(b.stock||0)!==0)return-1;
+    if((b.stock||0)===0&&(a.stock||0)!==0)return 1;
+    return db-da;
+  });
 
-// =============================================================
-// FINANZAS (admin only)
-// =============================================================
+  const fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  const totalFaltantes=faltantes.length;
+  const sinStock=faltantes.filter(p=>(p.stock||0)===0).length;
+  const bajoStock=totalFaltantes-sinStock;
+
+  const TIPO={servicio:'Servicio',venta:'Venta'};
+
+  // Agrupar por categoría
+  const porCat={};
+  faltantes.forEach(p=>{
+    const cat=p.categoria||'Sin categoría';
+    if(!porCat[cat])porCat[cat]=[];
+    porCat[cat].push(p);
+  });
+
+  const win=window.open('','_blank','width=820,height:700');
+  win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reporte Faltantes · Beauty Lab</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a1a;padding:36px 40px;font-size:12px}
+  /* HEADER */
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1a1a1a}
+  .brand{font-size:28px;font-weight:800;letter-spacing:-1px;color:#1a1a1a}
+  .brand span{color:#9a7830}
+  .brand-sub{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#888;margin-top:3px}
+  .hdr-r{text-align:right}
+  .hdr-r .title{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b}
+  .hdr-r .sub{font-size:10px;color:#888;margin-top:3px}
+  /* SUMMARY BOXES */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .kpi{border:1.5px solid #e0e0e0;border-radius:8px;padding:14px 16px}
+  .kpi.red{border-color:#c0392b;background:#fff5f5}
+  .kpi.orange{border-color:#e67e22;background:#fff8f0}
+  .kpi.gray{border-color:#bbb;background:#f9f9f9}
+  .kpi-label{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:5px}
+  .kpi-val{font-size:26px;font-weight:800;line-height:1}
+  .kpi.red .kpi-val{color:#c0392b}
+  .kpi.orange .kpi-val{color:#e67e22}
+  .kpi.gray .kpi-val{color:#555}
+  /* CATEGORY */
+  .cat-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#888;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid #eee}
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;margin-bottom:6px}
+  thead th{background:#1a1a1a;color:#fff;padding:8px 10px;font-size:9px;text-transform:uppercase;letter-spacing:1px;text-align:left}
+  tbody td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:11px}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafafa}
+  tbody tr.cero td{background:#fff5f5}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700}
+  .badge.cero{background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6}
+  .badge.bajo{background:#fef3e2;color:#e67e22;border:1px solid #fad7a0}
+  .badge.tipo{background:#f0f4ff;color:#2c5282;border:1px solid #bee3f8;font-weight:400}
+  .deficit{font-weight:700;color:#c0392b}
+  /* FOOTER */
+  .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#aaa}
+  .sign-box{border-top:1px solid #bbb;min-width:180px;padding-top:6px;text-align:center;font-size:9px;color:#888}
+  @media print{
+    body{padding:20px 24px}
+    .no-print{display:none}
+    @page{margin:1.5cm;size:A4}
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="brand">Beauty<span>Lab</span></div>
+    <div class="brand-sub">Salón de Belleza · Monterrey</div>
+  </div>
+  <div class="hdr-r">
+    <div class="title">⚠ Reporte de Faltantes</div>
+    <div class="sub">Generado: ${fecha} · ${hora}</div>
+    <div class="sub">Solicitado por: ${CU.name}</div>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi red">
+    <div class="kpi-label">Sin Stock (0 unidades)</div>
+    <div class="kpi-val">${sinStock}</div>
+  </div>
+  <div class="kpi orange">
+    <div class="kpi-label">Bajo Mínimo</div>
+    <div class="kpi-val">${bajoStock}</div>
+  </div>
+  <div class="kpi gray">
+    <div class="kpi-label">Total Productos a Reponer</div>
+    <div class="kpi-val">${totalFaltantes}</div>
+  </div>
+</div>
+
+${totalFaltantes===0
+  ?`<div style="text-align:center;padding:48px;color:#27ae60;font-size:16px;font-weight:600">✓ Inventario completo — Sin faltantes al momento del reporte</div>`
+  :Object.keys(porCat).map(cat=>`
+    <div class="cat-title">📦 ${cat}</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Tipo</th>
+          <th style="text-align:center">Stock Actual</th>
+          <th style="text-align:center">Mínimo</th>
+          <th style="text-align:center">Déficit</th>
+          <th>Estado</th>
+          ${porCat[cat].some(p=>p.costo)?'<th style="text-align:right">Costo Unit.</th>':''}
+        </tr>
+      </thead>
+      <tbody>
+        ${porCat[cat].map(p=>{
+          const deficit=Math.max(0,(p.minimo||0)-(p.stock||0));
+          const esCero=(p.stock||0)===0;
+          return`<tr class="${esCero?'cero':''}">
+            <td><strong>${p.nombre}</strong>${p.notas?`<div style="font-size:9px;color:#aaa;margin-top:1px">${p.notas}</div>`:''}
+            </td>
+            <td><span class="badge tipo">${TIPO[p.tipo_inv]||'Servicio'}</span></td>
+            <td style="text-align:center;font-weight:700;font-size:14px;color:${esCero?'#c0392b':'#e67e22'}">${p.stock||0}</td>
+            <td style="text-align:center;color:#888">${p.minimo||0}</td>
+            <td style="text-align:center" class="deficit">-${deficit}</td>
+            <td><span class="badge ${esCero?'cero':'bajo'}">${esCero?'SIN STOCK':'BAJO MÍNIMO'}</span></td>
+            ${porCat[cat].some(x=>x.costo)?`<td style="text-align:right">${p.costo?'$'+Number(p.costo).toLocaleString('es-MX'):'—'}</td>`:''}
+          </tr>`;}).join('')}
+      </tbody>
+    </table>`).join('')}
+
+<div style="margin-top:36px;display:flex;justify-content:space-between;align-items:flex-end">
+  <div style="font-size:10px;color:#aaa;max-width:300px">
+    Este reporte refleja el estado del inventario al momento de su generación.<br>
+    Para actualizar el stock, usa el módulo de Inventario en el sistema.
+  </div>
+  <div class="sign-box">
+    Autoriza: Katy<br>Administradora Beauty Lab
+  </div>
+</div>
+
+<div class="footer">
+  <span>Beauty Lab · Sistema Operativo</span>
+  <span>Reporte generado el ${fecha}</span>
+</div>
+
+<div class="no-print" style="margin-top:24px;text-align:center">
+  <button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨 Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;font-size:13px;cursor:pointer">Cerrar</button>
+</div>
+
+</body></html>`);
+  win.document.close();
+  win.focus();
+}
+
 const MESES_OPT=()=>Array.from({length:12},(_,i)=>{
   const d=new Date();d.setMonth(d.getMonth()-i);
   const v=d.toISOString().slice(0,7);
