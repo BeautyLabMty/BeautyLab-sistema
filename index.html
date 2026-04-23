@@ -1068,7 +1068,7 @@ async function verCita(id){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <button class="btn bd bsm" onclick="cancelarCita('${id}')">✕ Cancelar cita</button>
       ${ci.estado!=='completada'?`<button class="btn bg bsm" onclick="compCita('${id}','agenda')">✓ Completar</button>`:'<div></div>'}
-      <button class="btn bp bsm" onclick="irACaja('${ci.estilista_id}','${ci.cliente_id||''}','${(ci.cliente_nombre||'').replace(/'/g,"\\'")}')">💲 Cobrar</button>
+      <button class="btn bp bsm" onclick="cobrarCita('${id}')">💲 Cobrar</button>
       <button class="btn bg bsm" onclick="editarCita('${id}')">✏️ Editar</button>
       <button class="btn bd bsm" style="grid-column:span 2;background:rgba(240,96,96,.18)" onclick="eliminarCita('${id}')">🗑 Eliminar cita</button>
     </div>`);
@@ -1140,6 +1140,44 @@ async function cancelarCita(id){
   await dbU('bl_citas',id,{estado:'cancelada'});
   toast('Cita cancelada','');closeM();pgAgenda();
 }
+// Cobrar desde cita: carga servicios de la cita al carrito automáticamente
+async function cobrarCita(citaId){
+  const citas=await dbQ('bl_citas');
+  const ci=citas.find(c=>c.id===citaId);
+  if(!ci){irACaja('','','');return;}
+  // Cargar precios personalizados si los hay
+  const preciosDB=await dbQ('bl_precios');
+  const pm={};preciosDB.forEach(p=>pm[p.servicio_id]=p.precio);
+  // Construir carrito con los servicios de la cita
+  const cartItems=[];
+  (ci.servicios||[]).forEach(nombre=>{
+    const svc=CAT.find(s=>s.name===nombre);
+    if(svc){
+      const precio=pm[svc.id]??svc.price;
+      if(svc.variable||precio===0){
+        // precio variable — agregar con precio 0 para que el admin lo ajuste
+        cartItems.push({id:svc.id+Date.now()+Math.random(),name:nombre,price:0,qty:1,_needsPrice:true});
+      } else {
+        cartItems.push({id:svc.id,name:nombre,price:precio,qty:1});
+      }
+    } else {
+      // servicio no encontrado en catálogo (nombre libre), precio 0
+      cartItems.push({id:'free_'+Date.now()+Math.random(),name:nombre,price:0,qty:1,_needsPrice:true});
+    }
+  });
+  selEst=STAFF.find(s=>s.id===ci.estilista_id)||null;
+  selCli=ci.cliente_id?{id:ci.cliente_id,nombre:ci.cliente_nombre}:
+    ci.cliente_nombre?{id:null,nombre:ci.cliente_nombre}:null;
+  cart=cartItems;
+  closeM();
+  navigate('caja');
+  // Avisar si hay precios variables sin definir
+  const sinPrecio=cartItems.filter(i=>i._needsPrice);
+  if(sinPrecio.length){
+    setTimeout(()=>toast(`${sinPrecio.length} servicio(s) con precio variable — ajusta el monto 💲`,''),600);
+  }
+}
+
 function irACaja(estId,cliId,cliNom){
   selEst=STAFF.find(s=>s.id===estId)||null;
   selCli=cliId?{id:cliId,nombre:cliNom}:null;
@@ -1500,7 +1538,7 @@ function renderCart(){
   if(prr)prr.style.display=prop>0?'flex':'none';
   if(ci)ci.innerHTML=cart.length?cart.map(i=>`
     <div class="ci">
-      <div class="ci-n" style="flex:1">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}</div>
+      <div class="ci-n" style="flex:1">${i.name}${i.esPaq?` <span class="bx bg-gold" style="font-size:8px">PKG</span>`:''}${i._needsPrice?` <span class="bx bg-red" style="font-size:8px">$ pendiente</span>`:''}</div>
       <div class="ci-qty">
         <button class="qb" onclick="qtyCart('${i.id}',-1)">−</button>
         <span style="font-size:12px;min-width:14px;text-align:center">${i.qty}</span>
