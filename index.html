@@ -12,8 +12,8 @@
 :root{
   --bg:#060606;--bg2:#0f0f0f;--bg3:#181818;
   --gold:#C9A452;--gold2:#E8C87A;--gd:rgba(201,164,82,0.12);--gb:rgba(201,164,82,0.22);
-  --w:#fff;--g1:#d8d8d8;--g2:#888;--g3:#444;
-  --border:#1e1e1e;--red:#f06060;--green:#5EE087;--blue:#64b5ff;
+  --w:#fff;--g1:#e8e8e8;--g2:#b0b0b0;--g3:#777;
+  --border:#2a2a2a;--red:#f06060;--green:#5EE087;--blue:#64b5ff;
   --fd:'Cormorant Garamond',Georgia,serif;--fb:'Outfit',sans-serif;
   --r:10px;--sw:220px;--tr:.16s ease;
 }
@@ -21,6 +21,21 @@ html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* Iconos de inputs en blanco */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator{
+  filter:invert(1);opacity:.7;cursor:pointer
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+select.fc{color-scheme:dark}
+input[type="date"],input[type="time"],input[type="datetime-local"]{color-scheme:dark}
+/* Labels y textos secundarios más visibles */
+.fl{color:var(--g1)!important}
+tbody td{color:var(--g1)}
+thead th{color:var(--g2)}
 
 /* LOGIN */
 #ls{display:flex;align-items:center;justify-content:center;height:100vh;
