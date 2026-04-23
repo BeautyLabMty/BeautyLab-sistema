@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Beauty Lab · Sistema</title>
+<meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,7 +18,7 @@
   --fd:'Cormorant Garamond',Georgia,serif;--fb:'Outfit',sans-serif;
   --r:10px;--sw:220px;--tr:.16s ease;
 }
-html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);overflow:hidden}
+html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);overflow:hidden;color-scheme:dark}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -26,12 +27,15 @@ html,body{height:100%;font-family:var(--fb);background:var(--bg);color:var(--w);
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator{
-  filter:invert(1);opacity:.7;cursor:pointer
+  filter:invert(1) brightness(1.8) !important;
+  opacity:1 !important;
+  cursor:pointer;
+  padding:2px;
 }
-input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="time"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"]{color-scheme:dark}
 select.fc{color-scheme:dark}
-input[type="date"],input[type="time"],input[type="datetime-local"]{color-scheme:dark}
 /* Labels y textos secundarios más visibles */
 .fl{color:var(--g1)!important}
 tbody td{color:var(--g1)}
