@@ -2334,12 +2334,9 @@ async function doAjusteStock(id){
 async function reporteFaltantesPDF(){
   const prods=await dbQ('bl_inventario');
   const faltantes=prods.filter(p=>(p.stock||0)<=(p.minimo||0)).sort((a,b)=>{
-    // Ordenar: primero los de stock 0, luego por déficit mayor
-    const da=(p.minimo||0)-(p.stock||0);
-    const db=(b.minimo||0)-(b.stock||0);
     if((a.stock||0)===0&&(b.stock||0)!==0)return-1;
     if((b.stock||0)===0&&(a.stock||0)!==0)return 1;
-    return db-da;
+    return((b.minimo||0)-(b.stock||0))-((a.minimo||0)-(a.stock||0));
   });
 
   const fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -2347,10 +2344,8 @@ async function reporteFaltantesPDF(){
   const totalFaltantes=faltantes.length;
   const sinStock=faltantes.filter(p=>(p.stock||0)===0).length;
   const bajoStock=totalFaltantes-sinStock;
-
   const TIPO={servicio:'Servicio',venta:'Venta'};
 
-  // Agrupar por categoría
   const porCat={};
   faltantes.forEach(p=>{
     const cat=p.categoria||'Sin categoría';
@@ -2358,143 +2353,102 @@ async function reporteFaltantesPDF(){
     porCat[cat].push(p);
   });
 
-  const win=window.open('','_blank','width=820,height:700');
-  win.document.write(`<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
+  const html=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
 <title>Reporte Faltantes · Beauty Lab</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a1a;padding:36px 40px;font-size:12px}
-  /* HEADER */
-  .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:3px solid #1a1a1a}
-  .brand{font-size:28px;font-weight:800;letter-spacing:-1px;color:#1a1a1a}
-  .brand span{color:#9a7830}
-  .brand-sub{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#888;margin-top:3px}
-  .hdr-r{text-align:right}
-  .hdr-r .title{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b}
-  .hdr-r .sub{font-size:10px;color:#888;margin-top:3px}
-  /* SUMMARY BOXES */
-  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
-  .kpi{border:1.5px solid #e0e0e0;border-radius:8px;padding:14px 16px}
-  .kpi.red{border-color:#c0392b;background:#fff5f5}
-  .kpi.orange{border-color:#e67e22;background:#fff8f0}
-  .kpi.gray{border-color:#bbb;background:#f9f9f9}
-  .kpi-label{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:5px}
-  .kpi-val{font-size:26px;font-weight:800;line-height:1}
-  .kpi.red .kpi-val{color:#c0392b}
-  .kpi.orange .kpi-val{color:#e67e22}
-  .kpi.gray .kpi-val{color:#555}
-  /* CATEGORY */
-  .cat-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#888;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid #eee}
-  /* TABLE */
-  table{width:100%;border-collapse:collapse;margin-bottom:6px}
-  thead th{background:#1a1a1a;color:#fff;padding:8px 10px;font-size:9px;text-transform:uppercase;letter-spacing:1px;text-align:left}
-  tbody td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:11px}
-  tbody tr:last-child td{border-bottom:none}
-  tbody tr:hover{background:#fafafa}
-  tbody tr.cero td{background:#fff5f5}
-  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700}
-  .badge.cero{background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6}
-  .badge.bajo{background:#fef3e2;color:#e67e22;border:1px solid #fad7a0}
-  .badge.tipo{background:#f0f4ff;color:#2c5282;border:1px solid #bee3f8;font-weight:400}
-  .deficit{font-weight:700;color:#c0392b}
-  /* FOOTER */
-  .footer{margin-top:32px;padding-top:14px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#aaa}
-  .sign-box{border-top:1px solid #bbb;min-width:180px;padding-top:6px;text-align:center;font-size:9px;color:#888}
-  @media print{
-    body{padding:20px 24px}
-    .no-print{display:none}
-    @page{margin:1.5cm;size:A4}
-  }
-</style>
-</head>
-<body>
-
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a1a;padding:32px 36px;font-size:12px}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a1a1a}
+.brand{font-size:26px;font-weight:800;letter-spacing:-1px}.brand span{color:#9a7830}
+.brand-sub{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#888;margin-top:3px}
+.hdr-r{text-align:right}.hdr-r .title{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#c0392b}
+.hdr-r .sub{font-size:10px;color:#888;margin-top:3px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.kpi{border:1.5px solid #e0e0e0;border-radius:8px;padding:12px 14px}
+.kpi.red{border-color:#c0392b;background:#fff5f5}.kpi.orange{border-color:#e67e22;background:#fff8f0}.kpi.gray{border-color:#bbb;background:#f9f9f9}
+.kpi-label{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:#888;margin-bottom:4px}
+.kpi-val{font-size:24px;font-weight:800;line-height:1}
+.kpi.red .kpi-val{color:#c0392b}.kpi.orange .kpi-val{color:#e67e22}.kpi.gray .kpi-val{color:#555}
+.cat-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#888;margin:18px 0 7px;padding-bottom:4px;border-bottom:1px solid #eee}
+table{width:100%;border-collapse:collapse;margin-bottom:4px}
+thead th{background:#1a1a1a;color:#fff;padding:7px 9px;font-size:9px;text-transform:uppercase;letter-spacing:1px;text-align:left}
+tbody td{padding:7px 9px;border-bottom:1px solid #f0f0f0;font-size:11px}
+tbody tr.cero td{background:#fff5f5}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+.badge.cero{background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6}
+.badge.bajo{background:#fef3e2;color:#e67e22;border:1px solid #fad7a0}
+.badge.tipo{background:#f0f4ff;color:#2c5282;border:1px solid #bee3f8;font-weight:400}
+.deficit{font-weight:700;color:#c0392b}
+.footer{margin-top:28px;padding-top:12px;border-top:1px solid #e0e0e0;display:flex;justify-content:space-between;font-size:9px;color:#aaa}
+.sign-box{border-top:1px solid #bbb;min-width:180px;padding-top:5px;text-align:center;font-size:9px;color:#888}
+@media print{@page{margin:1.5cm;size:A4}body{padding:0}}
+</style></head><body>
 <div class="hdr">
-  <div>
-    <div class="brand">Beauty<span>Lab</span></div>
-    <div class="brand-sub">Salón de Belleza · Monterrey</div>
-  </div>
-  <div class="hdr-r">
-    <div class="title">⚠ Reporte de Faltantes</div>
-    <div class="sub">Generado: ${fecha} · ${hora}</div>
-    <div class="sub">Solicitado por: ${CU.name}</div>
-  </div>
+  <div><div class="brand">Beauty<span>Lab</span></div><div class="brand-sub">Salón de Belleza · Monterrey</div></div>
+  <div class="hdr-r"><div class="title">⚠ Reporte de Faltantes</div><div class="sub">Generado: ${fecha} · ${hora}</div><div class="sub">Solicitado por: ${CU.name}</div></div>
 </div>
-
 <div class="kpis">
-  <div class="kpi red">
-    <div class="kpi-label">Sin Stock (0 unidades)</div>
-    <div class="kpi-val">${sinStock}</div>
-  </div>
-  <div class="kpi orange">
-    <div class="kpi-label">Bajo Mínimo</div>
-    <div class="kpi-val">${bajoStock}</div>
-  </div>
-  <div class="kpi gray">
-    <div class="kpi-label">Total Productos a Reponer</div>
-    <div class="kpi-val">${totalFaltantes}</div>
-  </div>
+  <div class="kpi red"><div class="kpi-label">Sin Stock (0 unidades)</div><div class="kpi-val">${sinStock}</div></div>
+  <div class="kpi orange"><div class="kpi-label">Bajo Mínimo</div><div class="kpi-val">${bajoStock}</div></div>
+  <div class="kpi gray"><div class="kpi-label">Total a Reponer</div><div class="kpi-val">${totalFaltantes}</div></div>
 </div>
-
 ${totalFaltantes===0
-  ?`<div style="text-align:center;padding:48px;color:#27ae60;font-size:16px;font-weight:600">✓ Inventario completo — Sin faltantes al momento del reporte</div>`
-  :Object.keys(porCat).map(cat=>`
-    <div class="cat-title">📦 ${cat}</div>
-    <table>
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Tipo</th>
-          <th style="text-align:center">Stock Actual</th>
-          <th style="text-align:center">Mínimo</th>
-          <th style="text-align:center">Déficit</th>
-          <th>Estado</th>
-          ${porCat[cat].some(p=>p.costo)?'<th style="text-align:right">Costo Unit.</th>':''}
-        </tr>
-      </thead>
-      <tbody>
-        ${porCat[cat].map(p=>{
-          const deficit=Math.max(0,(p.minimo||0)-(p.stock||0));
-          const esCero=(p.stock||0)===0;
-          return`<tr class="${esCero?'cero':''}">
-            <td><strong>${p.nombre}</strong>${p.notas?`<div style="font-size:9px;color:#aaa;margin-top:1px">${p.notas}</div>`:''}
-            </td>
-            <td><span class="badge tipo">${TIPO[p.tipo_inv]||'Servicio'}</span></td>
-            <td style="text-align:center;font-weight:700;font-size:14px;color:${esCero?'#c0392b':'#e67e22'}">${p.stock||0}</td>
-            <td style="text-align:center;color:#888">${p.minimo||0}</td>
-            <td style="text-align:center" class="deficit">-${deficit}</td>
-            <td><span class="badge ${esCero?'cero':'bajo'}">${esCero?'SIN STOCK':'BAJO MÍNIMO'}</span></td>
-            ${porCat[cat].some(x=>x.costo)?`<td style="text-align:right">${p.costo?'$'+Number(p.costo).toLocaleString('es-MX'):'—'}</td>`:''}
-          </tr>`;}).join('')}
-      </tbody>
-    </table>`).join('')}
-
-<div style="margin-top:36px;display:flex;justify-content:space-between;align-items:flex-end">
-  <div style="font-size:10px;color:#aaa;max-width:300px">
-    Este reporte refleja el estado del inventario al momento de su generación.<br>
-    Para actualizar el stock, usa el módulo de Inventario en el sistema.
-  </div>
-  <div class="sign-box">
-    Autoriza: Katy<br>Administradora Beauty Lab
-  </div>
+  ?`<div style="text-align:center;padding:40px;color:#27ae60;font-size:15px;font-weight:600">✓ Inventario completo — Sin faltantes</div>`
+  :Object.keys(porCat).map(cat=>{
+    const tieneCosto=porCat[cat].some(p=>p.costo);
+    return`<div class="cat-title">📦 ${cat}</div>
+    <table><thead><tr>
+      <th>Producto</th><th>Tipo</th>
+      <th style="text-align:center">Stock</th>
+      <th style="text-align:center">Mínimo</th>
+      <th style="text-align:center">Déficit</th>
+      <th>Estado</th>
+      ${tieneCosto?'<th style="text-align:right">Costo</th>':''}
+    </tr></thead><tbody>
+    ${porCat[cat].map(p=>{
+      const deficit=Math.max(0,(p.minimo||0)-(p.stock||0));
+      const esCero=(p.stock||0)===0;
+      return`<tr class="${esCero?'cero':''}">
+        <td><strong>${p.nombre}</strong>${p.notas?`<div style="font-size:9px;color:#aaa">${p.notas}</div>`:''}</td>
+        <td><span class="badge tipo">${TIPO[p.tipo_inv]||'Servicio'}</span></td>
+        <td style="text-align:center;font-weight:700;font-size:14px;color:${esCero?'#c0392b':'#e67e22'}">${p.stock||0}</td>
+        <td style="text-align:center;color:#888">${p.minimo||0}</td>
+        <td style="text-align:center" class="deficit">-${deficit}</td>
+        <td><span class="badge ${esCero?'cero':'bajo'}">${esCero?'SIN STOCK':'BAJO MÍNIMO'}</span></td>
+        ${tieneCosto?`<td style="text-align:right">${p.costo?'$'+Number(p.costo).toLocaleString('es-MX'):'—'}</td>`:''}
+      </tr>`;}).join('')}
+    </tbody></table>`;}).join('')}
+<div style="margin-top:32px;display:flex;justify-content:space-between;align-items:flex-end">
+  <div style="font-size:10px;color:#aaa;max-width:300px">Reporte al momento de generación. Actualiza el stock desde el módulo de Inventario.</div>
+  <div class="sign-box">Autoriza: Katy<br>Administradora Beauty Lab</div>
 </div>
+<div class="footer"><span>Beauty Lab · Sistema Operativo</span><span>${fecha}</span></div>
+</body></html>`;
 
-<div class="footer">
-  <span>Beauty Lab · Sistema Operativo</span>
-  <span>Reporte generado el ${fecha}</span>
-</div>
-
-<div class="no-print" style="margin-top:24px;text-align:center">
-  <button onclick="window.print()" style="background:#1a1a1a;color:#fff;border:none;padding:10px 28px;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨 Imprimir / Guardar PDF</button>
-  <button onclick="window.close()" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;font-size:13px;cursor:pointer">Cerrar</button>
-</div>
-
-</body></html>`);
-  win.document.close();
-  win.focus();
+  // Inyectar en iframe oculto y mandar imprimir
+  let fr=document.getElementById('_pdf_frame');
+  if(!fr){
+    fr=document.createElement('iframe');
+    fr.id='_pdf_frame';
+    fr.style.cssText='position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none';
+    document.body.appendChild(fr);
+  }
+  fr.srcdoc=html;
+  fr.onload=()=>{
+    try{
+      fr.contentWindow.focus();
+      fr.contentWindow.print();
+    }catch(e){
+      // fallback: blob URL
+      const blob=new Blob([html],{type:'text/html'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.target='_blank';a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),3000);
+    }
+  };
+  toast('Abriendo reporte para imprimir…','ok');
 }
 
 const MESES_OPT=()=>Array.from({length:12},(_,i)=>{
