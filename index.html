@@ -1588,15 +1588,46 @@ async function cobrar(){
   const tot=Math.max(0,sub-desc)+prop;
   const pago=G('ppago')?.value||'efectivo';
   const comm=(Math.max(0,sub-desc))*selEst.comm;
-  const venta=await dbI('bl_ventas',{
+
+  // Limpiar items del carrito antes de guardar (quitar flags internos)
+  const itemsClean=cart.map(({_needsPrice,...rest})=>rest);
+
+  const baseData={
     estilista_id:selEst.id,estilista_nombre:selEst.name,
     cliente_id:selCli?.id||null,cliente_nombre:selCli?.nombre||'Sin nombre',
-    items:cart,subtotal:sub,descuento:desc,propina:prop,total:tot,metodo_pago:pago,
+    items:itemsClean,subtotal:sub,descuento:desc,total:tot,metodo_pago:pago,
     comision:comm,created_at:new Date().toISOString()
-  });
+  };
+
+  // Intentar guardar con propina; si falla (columna no existe), guardar sin ella
+  let venta=null;
+  if(prop>0){
+    try{
+      const{data:r,error}=await sb.from('bl_ventas').insert({...baseData,propina:prop}).select().single();
+      if(!error)venta=r;
+    }catch{}
+  }
+  // Si no hubo propina o falló, guardar sin campo propina
+  if(!venta){
+    try{
+      const{data:r,error}=await sb.from('bl_ventas').insert(baseData).select().single();
+      if(error)throw error;
+      venta=r;
+      // Si había propina pero la columna no existe, la mostramos igualmente en el ticket
+      if(prop>0)venta._propina_local=prop;
+    }catch(e){
+      toast('Error al guardar la venta — revisa tu conexión','err');
+      console.error(e);
+      return;
+    }
+  }
+
   if(venta){
     await descontarInventario(cart);
-    showTicket(venta);cart=[];selCli=null;
+    // Si propina vino de fallback local, inyectarla en el objeto para el ticket
+    if(venta._propina_local)venta.propina=venta._propina_local;
+    showTicket(venta);
+    cart=[];selCli=null;
   }
 }
 
