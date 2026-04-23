@@ -410,9 +410,9 @@ const sb = window.supabase.createClient(SURL, SKEY);
 // STAFF
 const STAFF = [
   {id:'katy',   name:'Katy',   role:'admin', email:'katy@beautylab.mx',   pw:'BL-Katy2026',   salary:0,    comm:0,    color:'#C9A452'},
-  {id:'yara',   name:'Yara',   role:'senior',email:'yara@beautylab.mx',   pw:'BL-Yara2026',   salary:4000, comm:.15,  color:'#A78BFA'},
-  {id:'laura',  name:'Laura',  role:'nails', email:'laura@beautylab.mx',  pw:'BL-Laura2026',  salary:3200, comm:.10,  color:'#F9A8D4'},
-  {id:'valeria',name:'Valeria',role:'jr',    email:'valeria@beautylab.mx',pw:'BL-Valeria2026',salary:3300, comm:.10,  color:'#6EE7B7'},
+  {id:'yara',   name:'Yara',   role:'senior',email:'yara@beautylab.mx',   pw:'BL-Yara2026',   salary:4000, comm:.15,  color:'#FFD700'},
+  {id:'laura',  name:'Laura',  role:'nails', email:'laura@beautylab.mx',  pw:'BL-Laura2026',  salary:3200, comm:.10,  color:'#7FFFD4'},
+  {id:'valeria',name:'Valeria',role:'jr',    email:'valeria@beautylab.mx',pw:'BL-Valeria2026',salary:3300, comm:.10,  color:'#FF85C2'},
 ];
 const STYLISTS = STAFF.filter(s=>s.role!=='admin');
 const ROLES = {admin:'Administradora',senior:'Estilista Senior',nails:'Nails',jr:'Estilista Jr.'};
