@@ -287,7 +287,25 @@ tbody tr:last-child td{border-bottom:none}
 .tab:hover{color:var(--w)}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 
-/* SBOX */
+/* KANBAN */
+.kb-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+.kb-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.kb-hdr{padding:11px 14px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid}
+.kb-cnt{padding:9px;min-height:120px}
+.kb-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:7px;cursor:pointer;transition:all .15s;position:relative}
+.kb-card:hover{border-color:var(--gold);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.kb-card-t{font-size:13px;font-weight:600;margin-bottom:5px;line-height:1.3}
+.kb-card-d{font-size:11px;color:var(--g3);margin-bottom:7px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kb-card-ft{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}
+.kb-add{width:100%;padding:8px;text-align:center;font-size:11px;color:var(--g3);cursor:pointer;border:1px dashed var(--border);border-radius:6px;transition:all .15s;background:none}
+.kb-add:hover{border-color:var(--gold);color:var(--gold);background:var(--gd)}
+.pr-urgente{background:rgba(240,96,96,.15);color:var(--red);border:1px solid rgba(240,96,96,.3)}
+.pr-alta{background:rgba(255,165,0,.12);color:#ff9500;border:1px solid rgba(255,165,0,.25)}
+.pr-normal{background:var(--gd);color:var(--gold);border:1px solid var(--gb)}
+.pr-baja{background:rgba(255,255,255,.05);color:var(--g3);border:1px solid var(--border)}
+@media(max-width:768px){.kb-wrap{grid-template-columns:1fr}}
+
+
 .sbox{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px}
 .sbox input{background:none;border:none;outline:none;color:var(--w);font-family:var(--fb);font-size:13px;flex:1}
 .sbox input::placeholder{color:var(--g3)}
@@ -409,13 +427,16 @@ const sb = window.supabase.createClient(SURL, SKEY);
 
 // STAFF
 const STAFF = [
-  {id:'katy',   name:'Katy',   role:'admin', email:'katy@beautylab.mx',   pw:'BL-Katy2026',   salary:0,    comm:0,    color:'#C9A452'},
-  {id:'yara',   name:'Yara',   role:'senior',email:'yara@beautylab.mx',   pw:'BL-Yara2026',   salary:4000, comm:.15,  color:'#FFD700'},
-  {id:'laura',  name:'Laura',  role:'nails', email:'laura@beautylab.mx',  pw:'BL-Laura2026',  salary:3200, comm:.10,  color:'#7FFFD4'},
-  {id:'valeria',name:'Valeria',role:'jr',    email:'valeria@beautylab.mx',pw:'BL-Valeria2026',salary:3300, comm:.10,  color:'#FF85C2'},
+  {id:'katy',       name:'Katy',       role:'admin',      email:'katy@beautylab.mx',       pw:'BL-Katy2026',    salary:0,    comm:0,    color:'#C9A452'},
+  {id:'leslie',     name:'Leslie',     role:'superadmin', email:'leslie@beautylab.mx',     pw:'BL-Leslie2026',  salary:0,    comm:0,    color:'#E8A0FF'},
+  {id:'superadmin', name:'Superadmin', role:'superadmin', email:'superadmin@beautylab.mx', pw:'BL-Super2026',   salary:0,    comm:0,    color:'#80CFFF'},
+  {id:'yara',       name:'Yara',       role:'senior',     email:'yara@beautylab.mx',       pw:'BL-Yara2026',    salary:4000, comm:.15,  color:'#FFD700'},
+  {id:'laura',      name:'Laura',      role:'nails',      email:'laura@beautylab.mx',      pw:'BL-Laura2026',   salary:3200, comm:.10,  color:'#7FFFD4'},
+  {id:'valeria',    name:'Valeria',    role:'jr',         email:'valeria@beautylab.mx',    pw:'BL-Valeria2026', salary:3300, comm:.10,  color:'#FF85C2'},
 ];
-const STYLISTS = STAFF.filter(s=>s.role!=='admin');
-const ROLES = {admin:'Administradora',senior:'Estilista Senior',nails:'Nails',jr:'Estilista Jr.'};
+const STYLISTS = STAFF.filter(s=>s.role!=='admin'&&s.role!=='superadmin');
+const ROLES = {superadmin:'Super Admin',admin:'Administradora',senior:'Estilista Senior',nails:'Nails',jr:'Estilista Jr.'};
+const isAdmin=u=>u&&(u.role==='admin'||u.role==='superadmin');
 
 // CATÁLOGO
 const CAT = [
@@ -607,13 +628,14 @@ function showBirthdayDetail(proximas){
 // SIDEBAR
 // =============================================================
 function buildSB(){
-  const isA=CU.role==='admin';
+  const isA=isAdmin(CU);
   const nav=[
     {p:'dashboard',i:'◈',l:'Dashboard'},
     {p:'agenda',   i:'◫',l:'Agenda'},
     {p:'clientes', i:'◎',l:'Clientes'},
     {p:'cumpleanos',i:'🎂',l:'Cumpleaños'},
     {p:'comisiones',i:'◐',l:'Comisiones'},
+    {p:'tareas',   i:'◧',l:'Tareas'},
     ...(isA?[
       {p:'caja',      i:'◉',l:'Caja · Cobro'},
       {p:'catalogo',  i:'◳',l:'Catálogo'},
@@ -633,13 +655,13 @@ function navigate(p){
   document.querySelectorAll('.ni').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
   const T={dashboard:'Dashboard',agenda:'Agenda',clientes:'Clientes',caja:'Caja · Cobro',
     comisiones:'Comisiones',catalogo:'Catálogo',inventario:'Inventario',finanzas:'Finanzas',
-    nomina:'Nómina Semanal',reportes:'Reportes',cumpleanos:'🎂 Cumpleaños'};
+    nomina:'Nómina Semanal',reportes:'Reportes',cumpleanos:'🎂 Cumpleaños',tareas:'Tareas'};
   G('tbt').textContent=T[p]||p; G('tba').innerHTML='';
   G('ct').innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
   if(window.innerWidth<=768){G('sb').classList.remove('open');SBO=false;}
   ({dashboard:pgDash,agenda:pgAgenda,clientes:pgCli,caja:pgCaja,comisiones:pgComm,
     catalogo:pgCat,inventario:pgInv,finanzas:pgFin,nomina:pgNomina,reportes:pgRep,
-    cumpleanos:pgCumpleanos})[p]?.();
+    cumpleanos:pgCumpleanos,tareas:pgTareas})[p]?.();
 }
 function toggleSB(){SBO=!SBO;G('sb').classList.toggle('open',SBO);}
 
@@ -699,7 +721,7 @@ async function dbD(t,id){
 // DASHBOARD
 // =============================================================
 async function pgDash(){
-  const c=G('ct'), isA=CU.role==='admin';
+  const c=G('ct'), isA=isAdmin(CU);
   if(!isA){
     const citas=await dbQ('bl_citas',{estilista_id:CU.id,fecha:today()});
     c.innerHTML=`
@@ -832,7 +854,7 @@ function agNav(d){agDate.setDate(agDate.getDate()+d);renderAgenda();}
 // VISTA DÍA
 // ──────────────────────────────────────────────────────────────
 function renderVistaDia(nav){
-  const isA=CU.role==='admin';
+  const isA=isAdmin(CU);
   const cols=isA?STYLISTS:[CU];
   const citas=window._agCitas;
   const dC=citas.filter(ci=>ci.fecha===isoD(agDate));
@@ -860,7 +882,7 @@ function renderVistaDia(nav){
 // VISTA SEMANA
 // ──────────────────────────────────────────────────────────────
 function renderVistaSemana(nav){
-  const isA=CU.role==='admin';
+  const isA=isAdmin(CU);
   const lunes=getLunes(agDate);
   const dias=Array.from({length:7},(_,i)=>{const d=new Date(lunes);d.setDate(d.getDate()+i);return d;});
   const semStr=getSemanaStr(lunes);
@@ -1506,7 +1528,7 @@ async function pgCaja(){
         <div class="fr" style="margin-bottom:10px">
           <div class="fg" style="margin:0"><label class="fl">Estilista</label>
             <select class="fc" id="pe" onchange="setEst(this.value)">
-              ${CU.role==='admin'
+              ${isAdmin(CU)
                 ?STYLISTS.map(s=>`<option value="${s.id}" ${selEst?.id===s.id?'selected':''}>${s.name}</option>`).join('')
                 :`<option value="${CU.id}">${CU.name}</option>`}
             </select></div>
@@ -1893,7 +1915,7 @@ function newSale(){closeTk();renderCart();}
 let commSemana=getLunes(new Date());
 
 async function pgComm(){
-  const isA=CU.role==='admin';
+  const isA=isAdmin(CU);
   const lunes=commSemana;
   const dom=new Date(lunes);dom.setDate(dom.getDate()+6);
   const semStr=getSemanaStr(lunes);
@@ -3291,6 +3313,301 @@ async function renderNomHist(){
           </tbody>
         </table></div>
       </div>`;}).join('')}`;
+}
+
+// =============================================================
+// TAREAS · KANBAN
+// =============================================================
+/*
+-- SQL Supabase para tareas:
+create table if not exists bl_tareas (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  titulo text not null,
+  descripcion text,
+  asignada_a text,
+  estado text default 'pendiente',
+  prioridad text default 'normal',
+  fecha_limite text,
+  tiempo_estimado integer,
+  tiempo_real integer,
+  notas text,
+  created_by text
+);
+alter table bl_tareas enable row level security;
+create policy "open_all" on bl_tareas for all using (true) with check (true);
+*/
+
+const KB_COLS=[
+  {id:'pendiente',  label:'Por Hacer',   color:'#777',   icon:'○'},
+  {id:'en_progreso',label:'En Progreso', color:'#C9A452',icon:'◑'},
+  {id:'completada', label:'Completado',  color:'#4cd97b',icon:'●'},
+];
+const PR_LABELS={urgente:'🔴 Urgente',alta:'🟠 Alta',normal:'🟡 Normal',baja:'⚪ Baja'};
+
+async function pgTareas(){
+  const isA=isAdmin(CU);
+  G('tba').innerHTML=`
+    <button class="btn bg bsm" onclick="pgTareas()">↺ Actualizar</button>
+    ${isA?`<button class="btn bp bsm" onclick="openNuevaTarea()">+ Nueva Tarea</button>`:''}`;
+  G('ct').innerHTML='<div class="empty"><div class="et">Cargando tablero...</div></div>';
+  const tareas=await dbQ('bl_tareas');
+  renderKanban(tareas);
+}
+
+function renderKanban(tareas){
+  const isA=isAdmin(CU);
+  const misTareas=isA?tareas:tareas.filter(t=>t.asignada_a===CU.id||!t.asignada_a);
+  const tot=misTareas.length;
+  const comp=misTareas.filter(t=>t.estado==='completada').length;
+  const pct=tot?Math.round(comp/tot*100):0;
+
+  G('ct').innerHTML=`
+    <!-- KPIs -->
+    <div class="kg" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kp"><div class="kl">Total Tareas</div><div class="kv">${tot}</div></div>
+      <div class="kp"><div class="kl">Por Hacer</div><div class="kv" style="color:var(--g2)">${misTareas.filter(t=>t.estado==='pendiente').length}</div></div>
+      <div class="kp"><div class="kl">En Progreso</div><div class="kv" style="color:var(--gold)">${misTareas.filter(t=>t.estado==='en_progreso').length}</div></div>
+      <div class="kp"><div class="kl">Completadas</div><div class="kv" style="color:var(--green)">${comp} <span style="font-size:13px">${pct?'· '+pct+'%':''}</span></div></div>
+    </div>
+    <!-- Barra de progreso global -->
+    ${tot?`<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g3);margin-bottom:4px">
+        <span>Progreso general</span><span>${pct}%</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:var(--border)">
+        <div style="height:100%;border-radius:3px;background:var(--green);width:${pct}%;transition:width .4s"></div>
+      </div>
+    </div>`:''}
+    <!-- Filtro por persona (solo admin) -->
+    ${isA?`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--g3)">Filtrar:</span>
+      <div class="chip sel" onclick="filtKB('',this)">Todos</div>
+      ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<div class="chip" onclick="filtKB('${s.id}',this)" style="border-color:${s.color}20">${s.name}</div>`).join('')}
+    </div>`:''}
+    <!-- KANBAN BOARD -->
+    <div class="kb-wrap" id="kb-board">
+      ${KB_COLS.map(col=>{
+        const cols=misTareas.filter(t=>t.estado===col.id);
+        return`<div class="kb-col">
+          <div class="kb-hdr" style="border-color:${col.color};color:${col.color}">
+            <span>${col.icon} ${col.label}</span>
+            <span style="font-size:18px;font-family:var(--fd);font-weight:300">${cols.length}</span>
+          </div>
+          <div class="kb-cnt" id="kb-${col.id}">
+            ${cols.map(t=>renderTareaCard(t)).join('')}
+            ${isA?`<button class="kb-add" onclick="openNuevaTarea('${col.id}')">+ agregar tarea</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderTareaCard(t){
+  const est=STAFF.find(s=>s.id===t.asignada_a);
+  const vence=t.fecha_limite?calcVencimiento(t.fecha_limite):'';
+  return`<div class="kb-card" onclick="verTarea('${t.id}')">
+    <div class="kb-card-t">${t.titulo||'Sin título'}</div>
+    ${t.descripcion?`<div class="kb-card-d">${t.descripcion}</div>`:''}
+    <div class="kb-card-ft">
+      <span class="bx pr-${t.prioridad||'normal'}" style="font-size:9px">${PR_LABELS[t.prioridad||'normal']}</span>
+      ${est?`<span class="bx bg-gray" style="font-size:9px;border-color:${est.color}40;color:${est.color}">● ${est.name}</span>`:''}
+      ${t.tiempo_estimado?`<span class="bx bg-gray" style="font-size:9px">⏱ ${t.tiempo_estimado}min</span>`:''}
+      ${vence?`<span class="bx ${vence.cls}" style="font-size:9px">${vence.label}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function calcVencimiento(fecha){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const f=new Date(fecha+'T12:00:00');
+  const diff=Math.round((f-hoy)/(1000*60*60*24));
+  if(diff<0)return{label:'⚠ Vencida',cls:'bg-red'};
+  if(diff===0)return{label:'📌 Hoy',cls:'bg-gold'};
+  if(diff<=2)return{label:`📅 ${diff}d`,cls:'bg-gold'};
+  return{label:`📅 ${diff}d`,cls:'bg-gray'};
+}
+
+function filtKB(id,el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.querySelectorAll('.kb-card').forEach(card=>{
+    if(!id){card.style.display='';return;}
+    // re-fetch not needed, just hide/show by data
+    card.style.display='';
+  });
+  // Re-render with filter
+  dbQ('bl_tareas').then(tareas=>{
+    const filtered=id?tareas.filter(t=>t.asignada_a===id):tareas;
+    const board=G('kb-board');if(!board)return;
+    KB_COLS.forEach(col=>{
+      const cnt=G('kb-'+col.id);if(!cnt)return;
+      const cols=filtered.filter(t=>t.estado===col.id);
+      const isA=isAdmin(CU);
+      cnt.innerHTML=cols.map(t=>renderTareaCard(t)).join('')+(isA?`<button class="kb-add" onclick="openNuevaTarea('${col.id}')">+ agregar tarea</button>`:'');
+    });
+  });
+}
+
+async function openNuevaTarea(estadoDefault='pendiente'){
+  openM(`
+    <div class="mt">◧ Nueva Tarea</div>
+    <div class="fg"><label class="fl">Título *</label><input class="fc" id="tk-t" placeholder="¿Qué hay que hacer?"></div>
+    <div class="fg"><label class="fl">Descripción</label><textarea class="fc" id="tk-d" rows="2" placeholder="Detalle opcional..."></textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Asignar a</label>
+        <select class="fc" id="tk-a">
+          <option value="">— Sin asignar —</option>
+          ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<option value="${s.id}">${s.name} · ${ROLES[s.role]}</option>`).join('')}
+        </select></div>
+      <div class="fg"><label class="fl">Prioridad</label>
+        <select class="fc" id="tk-p">
+          <option value="normal">🟡 Normal</option>
+          <option value="alta">🟠 Alta</option>
+          <option value="urgente">🔴 Urgente</option>
+          <option value="baja">⚪ Baja</option>
+        </select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Fecha límite</label><input class="fc" id="tk-f" type="date"></div>
+      <div class="fg"><label class="fl">Tiempo estimado (min)</label><input class="fc" id="tk-te" type="number" min="0" placeholder="ej: 60"></div>
+    </div>
+    <div class="fg"><label class="fl">Estado inicial</label>
+      <select class="fc" id="tk-e">
+        ${KB_COLS.map(c=>`<option value="${c.id}" ${c.id===estadoDefault?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
+      </select></div>
+    <div class="fg"><label class="fl">Notas adicionales</label><textarea class="fc" id="tk-n" rows="2" placeholder="Contexto, links, referencias..."></textarea></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="saveTarea()">Guardar Tarea</button>
+    </div>`);
+}
+
+async function saveTarea(){
+  const titulo=G('tk-t')?.value?.trim();
+  if(!titulo){toast('El título es requerido','err');return;}
+  const r=await dbI('bl_tareas',{
+    titulo, descripcion:G('tk-d')?.value,
+    asignada_a:G('tk-a')?.value||null,
+    prioridad:G('tk-p')?.value||'normal',
+    estado:G('tk-e')?.value||'pendiente',
+    fecha_limite:G('tk-f')?.value||null,
+    tiempo_estimado:parseInt(G('tk-te')?.value)||null,
+    notas:G('tk-n')?.value,
+    created_by:CU.id,
+    created_at:new Date().toISOString()
+  });
+  if(r){toast('Tarea creada ✓','ok');closeM();pgTareas();}
+}
+
+async function verTarea(id){
+  const tareas=await dbQ('bl_tareas');
+  const t=tareas.find(x=>x.id===id);if(!t)return;
+  const est=STAFF.find(s=>s.id===t.asignada_a);
+  const vence=t.fecha_limite?calcVencimiento(t.fecha_limite):null;
+  const isA=isAdmin(CU);
+  openM(`
+    <div class="mt">${t.titulo}</div>
+    ${t.descripcion?`<div style="font-size:13px;color:var(--g2);margin-bottom:14px;line-height:1.5">${t.descripcion}</div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+      <div><div style="font-size:9px;color:var(--g3)">Estado</div>
+        <div style="margin-top:3px"><span class="bx bg-gray">${KB_COLS.find(c=>c.id===t.estado)?.icon} ${KB_COLS.find(c=>c.id===t.estado)?.label||t.estado}</span></div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Prioridad</div>
+        <div style="margin-top:3px"><span class="bx pr-${t.prioridad||'normal'}">${PR_LABELS[t.prioridad||'normal']}</span></div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Asignada a</div>
+        <div style="margin-top:3px;font-size:13px;color:${est?.color||'var(--g2)'}">${est?.name||'Sin asignar'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Fecha límite</div>
+        <div style="margin-top:3px;display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px">${t.fecha_limite||'—'}</span>
+          ${vence?`<span class="bx ${vence.cls}" style="font-size:9px">${vence.label}</span>`:''}
+        </div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Tiempo estimado</div>
+        <div style="margin-top:3px;font-size:13px">${t.tiempo_estimado?t.tiempo_estimado+' min':'—'}</div></div>
+      <div><div style="font-size:9px;color:var(--g3)">Tiempo real</div>
+        <div style="margin-top:3px;font-size:13px">${t.tiempo_real?t.tiempo_real+' min':'—'}</div></div>
+    </div>
+    ${t.notas?`<div style="font-size:12px;padding:10px;background:var(--bg3);border-radius:var(--r);margin-bottom:14px;color:var(--g2);line-height:1.5">${t.notas}</div>`:''}
+    <!-- Mover entre columnas -->
+    <div style="font-size:9px;color:var(--g3);margin-bottom:7px;text-transform:uppercase;letter-spacing:1px">Mover a</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${KB_COLS.filter(c=>c.id!==t.estado).map(c=>`
+        <button class="btn bg bsm" onclick="moverTarea('${id}','${c.id}')">${c.icon} ${c.label}</button>`).join('')}
+    </div>
+    ${isA?`
+    <div style="font-size:9px;color:var(--g3);margin-bottom:7px;text-transform:uppercase;letter-spacing:1px">Acciones</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn bg bsm" onclick="editarTarea('${id}')">✏️ Editar</button>
+      <button class="btn bg bsm" onclick="registrarTiempo('${id}',${t.tiempo_real||0})">⏱ Registrar tiempo</button>
+      <button class="btn bd bsm" onclick="eliminarTarea('${id}')">🗑 Eliminar</button>
+    </div>`:''}
+    <div class="ma"><button class="btn bg bsm" onclick="closeM()">Cerrar</button></div>`);
+}
+
+async function moverTarea(id,estado){
+  const ok=await dbU('bl_tareas',id,{estado});
+  if(ok){toast(`Movida a ${KB_COLS.find(c=>c.id===estado)?.label} ✓`,'ok');closeM();pgTareas();}
+}
+
+async function registrarTiempo(id,actual){
+  const min=prompt(`Tiempo real dedicado (minutos):\nActual: ${actual||0} min`);
+  if(min===null)return;
+  const n=parseInt(min);if(isNaN(n)||n<0){toast('Número inválido','err');return;}
+  await dbU('bl_tareas',id,{tiempo_real:n});
+  toast('Tiempo registrado ✓','ok');closeM();pgTareas();
+}
+
+async function editarTarea(id){
+  const tareas=await dbQ('bl_tareas');
+  const t=tareas.find(x=>x.id===id);if(!t)return;
+  openM(`
+    <div class="mt">✏️ Editar Tarea</div>
+    <div class="fg"><label class="fl">Título *</label><input class="fc" id="tk-t" value="${t.titulo||''}"></div>
+    <div class="fg"><label class="fl">Descripción</label><textarea class="fc" id="tk-d" rows="2">${t.descripcion||''}</textarea></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Asignar a</label>
+        <select class="fc" id="tk-a">
+          <option value="">— Sin asignar —</option>
+          ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<option value="${s.id}" ${s.id===t.asignada_a?'selected':''}>${s.name} · ${ROLES[s.role]}</option>`).join('')}
+        </select></div>
+      <div class="fg"><label class="fl">Prioridad</label>
+        <select class="fc" id="tk-p">
+          ${['normal','alta','urgente','baja'].map(p=>`<option value="${p}" ${p===t.prioridad?'selected':''}>${PR_LABELS[p]}</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Fecha límite</label><input class="fc" id="tk-f" type="date" value="${t.fecha_limite||''}"></div>
+      <div class="fg"><label class="fl">Tiempo estimado (min)</label><input class="fc" id="tk-te" type="number" min="0" value="${t.tiempo_estimado||''}"></div>
+    </div>
+    <div class="fg"><label class="fl">Estado</label>
+      <select class="fc" id="tk-e">
+        ${KB_COLS.map(c=>`<option value="${c.id}" ${c.id===t.estado?'selected':''}>${c.icon} ${c.label}</option>`).join('')}
+      </select></div>
+    <div class="fg"><label class="fl">Notas</label><textarea class="fc" id="tk-n" rows="2">${t.notas||''}</textarea></div>
+    <div class="ma">
+      <button class="btn bg bsm" onclick="closeM()">Cancelar</button>
+      <button class="btn bp bsm" onclick="updateTarea('${id}')">Guardar Cambios</button>
+    </div>`);
+}
+
+async function updateTarea(id){
+  const titulo=G('tk-t')?.value?.trim();
+  if(!titulo){toast('El título es requerido','err');return;}
+  const ok=await dbU('bl_tareas',id,{
+    titulo, descripcion:G('tk-d')?.value,
+    asignada_a:G('tk-a')?.value||null,
+    prioridad:G('tk-p')?.value||'normal',
+    estado:G('tk-e')?.value||'pendiente',
+    fecha_limite:G('tk-f')?.value||null,
+    tiempo_estimado:parseInt(G('tk-te')?.value)||null,
+    notas:G('tk-n')?.value
+  });
+  if(ok){toast('Tarea actualizada ✓','ok');closeM();pgTareas();}
+}
+
+async function eliminarTarea(id){
+  if(!confirm('¿Eliminar esta tarea? No se puede deshacer.'))return;
+  await dbD('bl_tareas',id);
+  toast('Tarea eliminada','');closeM();pgTareas();
 }
 
 // create table if not exists bl_precios (
