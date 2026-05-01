@@ -511,7 +511,7 @@ const PAQUETES = [
 // STATE
 let CU=null, CP='', SBO=false;
 let cart=[], selEst=null, selCli=null;
-let agDate=new Date();
+let agDate=(()=>{const d=new Date();d.setHours(12,0,0,0);return d;})();
 let _cSvcs=[];
 
 // =============================================================
@@ -520,7 +520,7 @@ let _cSvcs=[];
 const G=id=>document.getElementById(id);
 const $=q=>document.querySelector(q);
 const mxn=n=>`$${Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
-const isoD=d=>new Date(d).toISOString().split('T')[0];
+const isoD=d=>{const dt=new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;};
 const today=()=>isoD(new Date());
 
 // INIT
@@ -805,7 +805,7 @@ function renderAgenda(){
       </div>
       <button class="btn bg bsm" onclick="agNavV(-1)">◀</button>
       <div class="ag-dt" id="ag-titulo" style="font-size:14px;flex:none"></div>
-      <button class="btn bg bsm" onclick="agDate=new Date();renderAgenda()">Hoy</button>
+      <button class="btn bg bsm" onclick="agDate=new Date();agDate.setHours(12,0,0,0);renderAgenda()">Hoy</button>
       <button class="btn bg bsm" onclick="agNavV(1)">▶</button>
     </div>`;
 
