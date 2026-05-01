@@ -521,7 +521,10 @@ const G=id=>document.getElementById(id);
 const $=q=>document.querySelector(q);
 const mxn=n=>`$${Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
 const isoD=d=>{const dt=new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;};
+const isoMes=d=>{const dt=new Date(d);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;};
 const today=()=>isoD(new Date());
+// Filtra ventas/egresos por mes usando fecha LOCAL (corrige drift UTC de Supabase)
+const mesMatch=(created_at,mes)=>!!created_at&&isoD(created_at).startsWith(mes);
 
 // INIT
 window.addEventListener('DOMContentLoaded',()=>{
@@ -726,8 +729,8 @@ async function pgDash(){
     return;
   }
   const [cH,vT,clT,ciA]=await Promise.all([dbQ('bl_citas',{fecha:today()}),dbQ('bl_ventas'),dbQ('bl_clientes'),dbQ('bl_citas')]);
-  const mes=new Date().toISOString().slice(0,7);
-  const vM=vT.filter(v=>(v.created_at||'').startsWith(mes));
+  const mes=isoMes(new Date());
+  const vM=vT.filter(v=>mesMatch(v.created_at,mes));
   const totM=vM.reduce((s,v)=>s+(v.total||0),0);
   const sem=getSemana(new Date());
   const cSem=ciA.filter(ci=>{const d=new Date(ci.fecha);return d>=sem.mon&&d<=sem.sun;});
@@ -2453,7 +2456,7 @@ ${totalFaltantes===0
 
 const MESES_OPT=()=>Array.from({length:12},(_,i)=>{
   const d=new Date();d.setMonth(d.getMonth()-i);
-  const v=d.toISOString().slice(0,7);
+  const v=isoMes(d);
   return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;
 }).join('');
 
@@ -2492,10 +2495,10 @@ async function renderFinResumen(){
     <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT()}</select>
   </div><div class="empty"><div class="et">Cargando...</div></div>`;
   await new Promise(r=>setTimeout(r,0));
-  const mes=G('fr-mes')?.value||new Date().toISOString().slice(0,7);
+  const mes=G('fr-mes')?.value||isoMes(new Date());
   const [ventas,egresos]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_egresos')]);
-  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
-  const eM=egresos.filter(e=>(e.fecha||e.created_at||'').startsWith(mes));
+  const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
+  const eM=egresos.filter(e=>(e.fecha||isoD(e.created_at||'')||'').startsWith(mes));
   const totI=vM.reduce((s,v)=>s+(v.total||0),0);
   const totE=eM.reduce((s,e)=>s+(e.monto||0),0);
   const totC=vM.reduce((s,v)=>s+(v.comision||0),0);
@@ -2563,9 +2566,9 @@ async function renderFinDiario(){
     <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT()}</select>
   </div><div class="empty"><div class="et">Cargando...</div></div>`;
   await new Promise(r=>setTimeout(r,0));
-  const mes=G('fd-mes')?.value||new Date().toISOString().slice(0,7);
+  const mes=G('fd-mes')?.value||isoMes(new Date());
   const ventas=await dbQ('bl_ventas');
-  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const byDay={};
   vM.forEach(v=>{
     const dia=isoD(v.created_at);
@@ -2625,11 +2628,11 @@ async function renderFinUtilidad(){
   w.innerHTML='<div class="empty"><div class="et">Cargando...</div></div>';
   const [ventas,egresos]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_egresos')]);
   const meses=Array.from({length:6},(_,i)=>{
-    const d=new Date();d.setMonth(d.getMonth()-i);return d.toISOString().slice(0,7);
+    const d=new Date();d.setMonth(d.getMonth()-i);return isoMes(d);
   }).reverse();
   const rows=meses.map(mes=>{
-    const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
-    const eM=egresos.filter(e=>(e.fecha||e.created_at||'').startsWith(mes));
+    const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
+    const eM=egresos.filter(e=>(e.fecha||isoD(e.created_at||'')||'').startsWith(mes));
     const ing=vM.reduce((s,v)=>s+(v.total||0),0);
     const gas=eM.reduce((s,e)=>s+(e.monto||0),0);
     const com=vM.reduce((s,v)=>s+(v.comision||0),0);
@@ -2692,9 +2695,9 @@ async function renderFinPersonas(){
     <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT()}</select>
   </div><div class="empty"><div class="et">Cargando...</div></div>`;
   await new Promise(r=>setTimeout(r,0));
-  const mes=G('fp-mes')?.value||new Date().toISOString().slice(0,7);
+  const mes=G('fp-mes')?.value||isoMes(new Date());
   const ventas=await dbQ('bl_ventas');
-  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const totMes=vM.reduce((s,v)=>s+(v.total||0),0);
   const data=STYLISTS.map(s=>{
     const sv=vM.filter(v=>v.estilista_id===s.id);
@@ -2846,20 +2849,20 @@ async function exportarDia(fecha){
 
 async function exportarMes(mes){
   const ventas=await dbQ('bl_ventas');
-  const vMes=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const vMes=ventas.filter(v=>mesMatch(v.created_at,mes));
   if(!vMes.length){toast('Sin ventas ese mes','err');return;}
   exportarExcel(vMes,`BeautyLab_Ventas_${mes}`);
 }
 async function pgRep(){
   const mesOpt=Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-i);
-    const v=d.toISOString().slice(0,7);
+    const v=isoMes(d);
     return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;}).join('');
   G('tba').innerHTML=`
     <select class="fc" id="rep-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="pgRep()">${mesOpt}</select>
     <button class="btn bg bsm" onclick="exportarMes(G('rep-mes').value)">⬇ Excel</button>`;
-  const mes=G('rep-mes')?.value||new Date().toISOString().slice(0,7);
+  const mes=G('rep-mes')?.value||isoMes(new Date());
   const [ventas,citas,clis]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_citas'),dbQ('bl_clientes')]);
-  const vM=ventas.filter(v=>(v.created_at||'').startsWith(mes));
+  const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const cM=citas.filter(c=>(c.fecha||'').startsWith(mes));
 
   // Servicios más vendidos
