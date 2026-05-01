@@ -2454,10 +2454,10 @@ ${totalFaltantes===0
   toast('Abriendo reporte para imprimir…','ok');
 }
 
-const MESES_OPT=()=>Array.from({length:12},(_,i)=>{
+const MESES_OPT=(sel='')=>Array.from({length:12},(_,i)=>{
   const d=new Date();d.setMonth(d.getMonth()-i);
   const v=isoMes(d);
-  return`<option value="${v}">${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;
+  return`<option value="${v}"${v===sel?' selected':''}>${d.toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</option>`;
 }).join('');
 
 async function pgFin(){
@@ -2490,12 +2490,9 @@ function finTab(el,id){
 
 async function renderFinResumen(){
   const w=G('fin-resumen');if(!w)return;
-  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-    <label class="fl" style="margin:0">Mes:</label>
-    <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT()}</select>
-  </div><div class="empty"><div class="et">Cargando...</div></div>`;
-  await new Promise(r=>setTimeout(r,0));
+  // Leer mes ANTES de destruir el DOM
   const mes=G('fr-mes')?.value||isoMes(new Date());
+  w.innerHTML=`<div class="empty"><div class="et">Cargando...</div></div>`;
   const [ventas,egresos]=await Promise.all([dbQ('bl_ventas'),dbQ('bl_egresos')]);
   const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const eM=egresos.filter(e=>(e.fecha||isoD(e.created_at||'')||'').startsWith(mes));
@@ -2506,7 +2503,7 @@ async function renderFinResumen(){
   w.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <label class="fl" style="margin:0">Mes:</label>
-      <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT()}</select>
+      <select class="fc" id="fr-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinResumen()">${MESES_OPT(mes)}</select>
     </div>
     <div class="kg">
       <div class="kp"><div class="kl">Ingresos Brutos</div><div class="kv">${mxn(totI)}</div><div class="ks">${vM.length} ventas</div></div>
@@ -2558,15 +2555,12 @@ async function renderFinResumen(){
       </div>
     </div>`;
 }
+}
 
 async function renderFinDiario(){
   const w=G('fin-diario');if(!w)return;
-  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-    <label class="fl" style="margin:0">Mes:</label>
-    <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT()}</select>
-  </div><div class="empty"><div class="et">Cargando...</div></div>`;
-  await new Promise(r=>setTimeout(r,0));
   const mes=G('fd-mes')?.value||isoMes(new Date());
+  w.innerHTML=`<div class="empty"><div class="et">Cargando...</div></div>`;
   const ventas=await dbQ('bl_ventas');
   const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const byDay={};
@@ -2583,7 +2577,7 @@ async function renderFinDiario(){
   w.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <label class="fl" style="margin:0">Mes:</label>
-      <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT()}</select>
+      <select class="fc" id="fd-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinDiario()">${MESES_OPT(mes)}</select>
     </div>
     <div class="kg" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px">
       <div class="kp"><div class="kl">Total del Mes</div><div class="kv">${mxn(totMes)}</div></div>
@@ -2690,12 +2684,8 @@ async function renderFinUtilidad(){
 
 async function renderFinPersonas(){
   const w=G('fin-personas');if(!w)return;
-  w.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-    <label class="fl" style="margin:0">Mes:</label>
-    <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT()}</select>
-  </div><div class="empty"><div class="et">Cargando...</div></div>`;
-  await new Promise(r=>setTimeout(r,0));
   const mes=G('fp-mes')?.value||isoMes(new Date());
+  w.innerHTML=`<div class="empty"><div class="et">Cargando...</div></div>`;
   const ventas=await dbQ('bl_ventas');
   const vM=ventas.filter(v=>mesMatch(v.created_at,mes));
   const totMes=vM.reduce((s,v)=>s+(v.total||0),0);
@@ -2712,10 +2702,10 @@ async function renderFinPersonas(){
   w.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <label class="fl" style="margin:0">Mes:</label>
-      <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT()}</select>
+      <select class="fc" id="fp-mes" style="width:auto;padding:6px 10px;font-size:12px" onchange="renderFinPersonas()">${MESES_OPT(mes)}</select>
     </div>
     <div class="card" style="margin-bottom:12px">
-      <div class="ct2">Comparativo del Equipo · ${new Date(mes+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</div>
+      <div class="ct2">Comparativo del Equipo · ${new Date(mes+'-01T12:00:00').toLocaleDateString('es-MX',{month:'long',year:'numeric'})}</div>
       <div class="tw"><table>
         <thead><tr><th>Persona</th><th>Ventas Brutas</th><th>% Total</th><th>Comisión</th><th>Aportación Neta</th><th>Servicios</th><th>Ticket Prom.</th></tr></thead>
         <tbody>
