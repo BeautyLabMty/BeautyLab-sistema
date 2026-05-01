@@ -3383,7 +3383,7 @@ function renderKanban(tareas){
     ${isA?`<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap">
       <span style="font-size:10px;color:var(--g3)">Filtrar:</span>
       <div class="chip sel" onclick="filtKB('',this)">Todos</div>
-      ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<div class="chip" onclick="filtKB('${s.id}',this)" style="border-color:${s.color}20">${s.name}</div>`).join('')}
+      ${STAFF.filter(s=>s.id!=='superadmin').map(s=>`<div class="chip" onclick="filtKB('${s.id}',this)" style="border-color:${s.color}20">${s.name}</div>`).join('')}
     </div>`:''}
     <!-- KANBAN BOARD -->
     <div class="kb-wrap" id="kb-board">
@@ -3458,7 +3458,7 @@ async function openNuevaTarea(estadoDefault='pendiente'){
       <div class="fg"><label class="fl">Asignar a</label>
         <select class="fc" id="tk-a">
           <option value="">— Sin asignar —</option>
-          ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<option value="${s.id}">${s.name} · ${ROLES[s.role]}</option>`).join('')}
+          ${STAFF.filter(s=>s.id!=='superadmin').map(s=>`<option value="${s.id}">${s.name} · ${ROLES[s.role]}</option>`).join('')}
         </select></div>
       <div class="fg"><label class="fl">Prioridad</label>
         <select class="fc" id="tk-p">
@@ -3567,7 +3567,7 @@ async function editarTarea(id){
       <div class="fg"><label class="fl">Asignar a</label>
         <select class="fc" id="tk-a">
           <option value="">— Sin asignar —</option>
-          ${STAFF.filter(s=>s.role!=='superadmin').map(s=>`<option value="${s.id}" ${s.id===t.asignada_a?'selected':''}>${s.name} · ${ROLES[s.role]}</option>`).join('')}
+          ${STAFF.filter(s=>s.id!=='superadmin').map(s=>`<option value="${s.id}" ${s.id===t.asignada_a?'selected':''}>${s.name} · ${ROLES[s.role]}</option>`).join('')}
         </select></div>
       <div class="fg"><label class="fl">Prioridad</label>
         <select class="fc" id="tk-p">
